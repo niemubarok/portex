@@ -14,16 +14,13 @@ import (
 )
 
 // Connect establishes a database connection using the provided DSN.
-func Connect(dsn string, level string) (*gorm.DB, error) {
-	// Use Warn level by default
+func Connect(dsn string) (*gorm.DB, error) {
+	// Use Warn level by default — only logs slow queries and errors.
 	logLevel := logger.Warn
-	switch strings.ToLower(level) {
-	case "info":
+	if os.Getenv("DB_LOG_LEVEL") == "info" {
 		logLevel = logger.Info
-	case "silent":
+	} else if os.Getenv("DB_LOG_LEVEL") == "silent" {
 		logLevel = logger.Silent
-	case "error":
-		logLevel = logger.Error
 	}
 
 	var dialector gorm.Dialector
