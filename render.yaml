@@ -19,21 +19,22 @@ services:
       - key: APP_PORT
         value: 8080
 
-  # 2. Redis (Render Key Value)
-  - type: keyvalue
-    name: portex-redis
-    plan: free
-    ipAllowList: [] # Only allow internal access
-
-staticSites:
-  # 3. Frontend (React/Vite)
-  - name: portex-web
+  # 2. Frontend (React/Vite Static Site)
+  - type: web
+    name: portex-web
+    runtime: static
+    staticPublishPath: ./dist
     rootDir: app/apps/web
     buildCommand: pnpm install && pnpm build
-    publishDir: dist
     envVars:
       - key: VITE_API_URL
         fromService:
           type: web
           name: portex-api
           property: host
+
+  # 3. Redis (Render Key Value)
+  - type: keyvalue
+    name: portex-redis
+    plan: free
+    ipAllowList: [] # Only allow internal access
