@@ -23,7 +23,7 @@ PortEx is a modern portal designed for efficient document handling, approval wor
 - **Icons:** Lucide React
 
 ### Infrastructure
-- **Deployment:** Vercel (Frontend)
+- **Deployment:** Render.com (Frontend & Backend)
 - **Database:** Supabase
 - **Storage:** Supabase Storage / MinIO (S3 Compatible)
 
@@ -65,7 +65,7 @@ Copy `.env.example` to `.env` in the `app` directory and fill in your credential
 
 ## 🚢 Deployment
 
-Detailed deployment instructions for Vercel and Supabase can be found in the [deployment guide](docs/deployment_guide.md).
+Detailed deployment instructions for Render.com and Supabase can be found in the [deployment guide](docs/deployment_guide.md).
 
 ---
 *Built with ❤️ by PortEx Team*
