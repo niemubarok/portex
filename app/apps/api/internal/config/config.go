@@ -28,6 +28,7 @@ type Config struct {
 	Port        string
 	AppURL      string
 	DatabaseURL string
+	DBLogLevel  string
 
 	JWTSecret        string
 	JWTAccessExpiry  time.Duration
@@ -86,6 +87,7 @@ func Load() (*Config, error) {
 		Port:        getEnv("APP_PORT", "8080"),
 		AppURL:      getEnv("APP_URL", "http://localhost:8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "e-document-portal.db"),
+		DBLogLevel:  getEnv("DB_LOG_LEVEL", "warn"),
 
 		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
 		JWTAccessExpiry:  parseDuration(getEnv("JWT_ACCESS_EXPIRY", "15m")),

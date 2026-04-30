@@ -32,7 +32,7 @@ func main() {
 	}
 
 	// Connect to database
-	db, err := database.Connect(cfg.DatabaseURL)
+	db, err := database.Connect(cfg.DatabaseURL, cfg.DBLogLevel)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
