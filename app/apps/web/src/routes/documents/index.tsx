@@ -1,0 +1,184 @@
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
+import { useDocuments, useDeleteDocument, useApproveDocument, Document } from '@/hooks/use-documents'
+import { auth } from '@/lib/auth'
+import { useEffect, useState } from 'react'
+import { ConfirmationModal, ConfirmationType } from '@/components/confirmation-modal'
+import { StatusBadge } from '@/components/status-badge'
+import { DocumentDetailModal } from '@/components/document-detail-modal'
+import { Search, Filter, Plus, FileText, Trash2, Edit3, Eye } from 'lucide-react'
+
+export const Route = createFileRoute('/documents/')({
+  component: DocumentsPage,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      q: (search.q as string) || undefined,
+      status: (search.status as string) || undefined,
+    }
+  },
+})
+
+function DocumentsPage() {
+  const navigate = useNavigate()
+  const { q, status } = Route.useSearch()
+
+  const { data: documents, isLoading } = useDocuments({ 
+    q: q,
+    status: status
+  })
+
+  const deleteDoc = useDeleteDocument()
+  const approveDoc = useApproveDocument()
+  const user = auth.getUser()
+
+  useEffect(() => {
+    if (!auth.isAuthenticated()) navigate({ to: '/login' })
+  }, [navigate])
+
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
+  
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: ConfirmationType;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'question',
+  })
+
+  const closeConfirm = () => setConfirmState(prev => ({ ...prev, isOpen: false }))
+
+  const handleDelete = async (id: string, title: string) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Hapus Dokumen',
+      message: `Apakah Anda yakin ingin menghapus dokumen "${title}"? Tindakan ini tidak dapat dibatalkan.`,
+      type: 'danger',
+      confirmText: 'Ya, Hapus',
+      onConfirm: () => {
+        deleteDoc.mutate(id)
+        closeConfirm()
+      }
+    })
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dokumen Ekspor</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">Kelola semua dokumen kepatuhan ekspor</p>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          {user?.role !== 'MANAGER' && user?.role !== 'AUDITOR' && (
+            <Link to="/documents/new" className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-bold text-white hover:bg-[var(--accent-hover)] transition-all shadow-lg shadow-[var(--accent)]/20 hover:-translate-y-0.5 active:translate-y-0">
+              <Plus size={18} />
+              Upload
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <svg className="animate-spin h-6 w-6 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75"/></svg>
+          </div>
+        ) : !documents || documents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-[var(--text-muted)]">
+            <svg className="w-16 h-16 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+            <p className="text-base font-medium mb-1">Belum ada dokumen</p>
+            <p className="text-sm">Klik tombol "Upload Dokumen" untuk memulai</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[var(--text-muted)] text-xs uppercase tracking-wider border-b border-[var(--border)]">
+                  <th className="px-5 py-3.5 font-medium">Judul Dokumen</th>
+                  <th className="px-5 py-3.5 font-medium">PO</th>
+                  <th className="px-5 py-3.5 font-medium">Status</th>
+                  <th className="px-5 py-3.5 font-medium">Tanggal Upload</th>
+                  <th className="px-5 py-3.5 font-medium text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {documents.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-[var(--bg-hover)]/50 transition-colors">
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-[var(--text-primary)]">{doc.title}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      {doc.po_path ? (
+                        <span className="text-[var(--success)] text-xs font-medium">✓ Ada</span>
+                      ) : (
+                        <span className="text-[var(--danger)] text-xs font-medium">✗ Belum</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4"><StatusBadge status={doc.status} /></td>
+                    <td className="px-5 py-4 text-[var(--text-muted)]">
+                      <div className="flex flex-col">
+                        <span>{new Date(doc.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        <span className="text-[10px] opacity-60">{new Date(doc.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-right flex justify-end gap-2">
+                        <button
+                          onClick={() => { setSelectedDoc(doc) }}
+                          className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors p-2 rounded-lg hover:bg-[var(--accent)]/10"
+                          title="Lihat Detail"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        {(doc.status === 'Draft' && (user?.role === 'ADMIN' || String(doc.uploader_id) === user?.id)) && (
+                          <Link
+                            to={`/documents/${doc.id}/edit`}
+                            className="text-[var(--text-muted)] hover:text-[var(--warning)] transition-colors p-2 rounded-lg hover:bg-[var(--warning)]/10"
+                            title="Edit"
+                          >
+                            <Edit3 size={18} />
+                          </Link>
+                        )}
+
+                      {(doc.status === 'Draft' && (user?.role === 'ADMIN' || String(doc.uploader_id) === user?.id)) && (
+                        <button
+                          onClick={() => handleDelete(doc.id, doc.title)}
+                          className="text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors p-2 rounded-lg hover:bg-[var(--danger)]/10"
+                          title="Hapus"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <DocumentDetailModal document={selectedDoc} onClose={() => setSelectedDoc(null)} />
+
+      {/* Confirmation Modal for Delete */}
+      <ConfirmationModal 
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        type={confirmState.type}
+        confirmText={confirmState.confirmText}
+        onClose={closeConfirm}
+        onConfirm={confirmState.onConfirm}
+        isLoading={deleteDoc.isPending || approveDoc.isPending}
+      />
+    </div>
+  )
+}
