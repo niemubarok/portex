@@ -84,7 +84,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		AppName:     getEnv("APP_NAME", "app"),
 		AppEnv:      getEnv("APP_ENV", "development"),
-		Port:        getEnv("APP_PORT", "8080"),
+		Port:        getEnv("PORT", getEnv("APP_PORT", "8080")),
 		AppURL:      getEnv("APP_URL", "http://localhost:8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "e-document-portal.db"),
 		DBLogLevel:  getEnv("DB_LOG_LEVEL", "warn"),
