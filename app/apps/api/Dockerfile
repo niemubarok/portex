@@ -22,6 +22,11 @@ WORKDIR /app
 
 COPY --from=builder /app/server .
 
+# Default Env Variables
+ENV GIN_MODE=release
+ENV DB_LOG_LEVEL=warn
+ENV APP_PORT=8080
+
 EXPOSE 8080
 
 CMD ["./server"]
