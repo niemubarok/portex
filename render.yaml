@@ -20,9 +20,8 @@ services:
         value: 8080
 
   # 2. Frontend (React/Vite)
-  - type: web
+  - type: static
     name: portex-web
-    env: static
     rootDir: app/apps/web
     buildCommand: pnpm install && pnpm build
     publishDir: dist
