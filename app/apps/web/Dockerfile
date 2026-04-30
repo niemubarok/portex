@@ -18,20 +18,21 @@ COPY . .
 # Set Environment Variables for Build
 ENV VITE_API_URL=https://portex-api.containers.snapdeploy.dev
 
-# Build (Hanya jalankan vite build, skip tsc untuk memastikan build tetap jadi)
+# Build
 RUN pnpm vite build
+
+# Debug: List files to verify build success
+RUN ls -la dist/
 
 # Production stage
 FROM nginx:alpine
 
-# Hapus file bawaan Nginx
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy build artifacts dari folder dist
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx config
+# Copy nginx config first
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Create directory and copy build artifacts
+RUN mkdir -p /var/www/html
+COPY --from=builder /app/dist /var/www/html
 
 EXPOSE 80
 
