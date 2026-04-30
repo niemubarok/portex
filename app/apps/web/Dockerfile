@@ -1,50 +1,30 @@
 # Build stage
-FROM node:20-alpine AS base
+FROM node:20-alpine AS builder
 
-RUN corepack enable
+# Set pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-FROM base AS deps
-WORKDIR /app
+RUN pnpm install
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY packages/shared/package.json ./packages/shared/
-
-RUN pnpm install --frozen-lockfile
-
-# Build
-FROM base AS builder
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+# Copy source
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Build
+RUN pnpm build
 
-RUN pnpm --filter web build
+# Production stage
+FROM nginx:alpine
 
-# Run
-FROM base AS runner
-WORKDIR /app
+# Copy build artifacts
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-ENV NODE_ENV=production
+# Copy nginx config if needed (default is fine for simple SPA)
+EXPOSE 80
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder /app/apps/web/public ./apps/web/public
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "apps/web/server.js"]
+CMD ["nginx", "-g", "daemon off;"]
