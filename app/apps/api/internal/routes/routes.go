@@ -44,16 +44,6 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 	r.Use(middleware.CORS(cfg.CORSOrigins))
 	r.Use(middleware.Gzip())
 
-	r.POST("/api/test-upload", func(c *gin.Context) {
-		log.Printf("[TEST] Received Content-Length: %d", c.Request.ContentLength)
-		if err := c.Request.ParseMultipartForm(100 << 20); err != nil {
-			log.Printf("[TEST] Error: %v", err)
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(200, gin.H{"message": "Success!"})
-	})
-
 	// Run auto-migration
 	if err := models.Migrate(db); err != nil {
 		log.Fatalf("Migration failed: %v", err)
@@ -76,7 +66,7 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 	// API Documentation
 	gindocs.Mount(r, db, gindocs.Config{
 		Title:       cfg.AppName + " API",
-		Description: "REST API built with PortEx.",
+		Description: "REST API built with PortEx",
 		Version:     "1.0.0",
 		UI:          gindocs.UIScalar,
 		ScalarTheme: "kepler",
@@ -155,18 +145,16 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// Registry
+	// Routes...
 	r.GET("/r.json", uiRegistryHandler.GetRegistry)
 	r.GET("/r/:name", uiRegistryHandler.GetComponent)
 
-	// Public blog
 	blogs := r.Group("/api/blogs")
 	{
 		blogs.GET("", blogHandler.ListPublished)
 		blogs.GET("/:slug", blogHandler.GetBySlug)
 	}
 
-	// Public auth
 	auth := r.Group("/api/auth")
 	{
 		auth.POST("/register", authHandler.Register)
@@ -176,46 +164,18 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 		auth.POST("/reset-password", authHandler.ResetPassword)
 	}
 
-	// OAuth2
-	oauthGroup := auth.Group("/oauth")
-	{
-		oauthGroup.GET("/:provider", authHandler.OAuthBegin)
-		oauthGroup.GET("/:provider/callback", authHandler.OAuthCallback)
-	}
-
 	auth.POST("/totp/verify", totpHandler.Verify)
-	auth.POST("/totp/backup-codes/verify", totpHandler.VerifyBackupCode)
-
 	r.GET("/verify/:id", documentHandler.Verify)
 
-	// Protected routes
 	protected := r.Group("/api")
 	protected.Use(middleware.Auth(db, authService))
 	{
 		protected.GET("/auth/me", authHandler.Me)
 		protected.POST("/auth/logout", authHandler.Logout)
-
-		protected.POST("/auth/totp/setup", totpHandler.Setup)
-		protected.POST("/auth/totp/enable", totpHandler.Enable)
-		protected.POST("/auth/totp/disable", totpHandler.Disable)
-		protected.GET("/auth/totp/status", totpHandler.Status)
-
 		protected.GET("/users/:id", userHandler.GetByID)
-
 		protected.POST("/uploads", uploadHandler.Create)
-		protected.POST("/uploads/presign", uploadHandler.Presign)
-		protected.POST("/uploads/complete", uploadHandler.CompleteUpload)
 		protected.GET("/uploads", uploadHandler.List)
-		protected.GET("/uploads/:id", uploadHandler.GetByID)
-		protected.DELETE("/uploads/:id", uploadHandler.Delete)
-
 		protected.POST("/ai/complete", aiHandler.Complete)
-		protected.POST("/ai/chat", aiHandler.Chat)
-		protected.POST("/ai/stream", aiHandler.Stream)
-
-		protected.GET("/ui-components", uiRegistryHandler.ListComponents)
-		protected.GET("/ui-components/:name", uiRegistryHandler.GetComponentDetail)
-
 		protected.GET("/documents", documentHandler.List)
 		protected.GET("/documents/:id", documentHandler.GetByID)
 		protected.POST("/documents", documentHandler.Create)
@@ -224,20 +184,10 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 		protected.GET("/documents/:id/download", documentHandler.Download)
 
 		auditLogs := protected.Group("/audit_logs")
-		auditLogs.Use(middleware.RequireRole("ADMIN", "AUDITOR", "MANAGER", "OFFICER"))
 		{
 			auditLogs.GET("", auditLogHandler.List)
-			auditLogs.GET("/:id", auditLogHandler.GetByID)
 		}
-
 		protected.GET("/settings", settingHandler.GetList)
-	}
-
-	profile := protected.Group("/profile")
-	{
-		profile.GET("", userHandler.GetProfile)
-		profile.PUT("", userHandler.UpdateProfile)
-		profile.DELETE("", userHandler.DeleteProfile)
 	}
 
 	admin := r.Group("/api")
@@ -248,18 +198,7 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 		admin.POST("/users", userHandler.Create)
 		admin.PUT("/users/:id", userHandler.Update)
 		admin.DELETE("/users/:id", userHandler.Delete)
-
-		admin.GET("/admin/blogs", blogHandler.List)
-		admin.POST("/admin/blogs", blogHandler.Create)
-		admin.PUT("/admin/blogs/:id", blogHandler.Update)
-		admin.DELETE("/admin/blogs/:id", blogHandler.Delete)
-
-		admin.POST("/admin/ui-components", uiRegistryHandler.CreateComponent)
-		admin.PUT("/admin/ui-components/:name", uiRegistryHandler.UpdateComponent)
-		admin.DELETE("/admin/ui-components/:name", uiRegistryHandler.DeleteComponent)
-
 		admin.DELETE("/documents/:id", documentHandler.Delete)
-		admin.DELETE("/audit_logs/:id", auditLogHandler.Delete)
 		admin.PUT("/settings", settingHandler.Update)
 	}
 

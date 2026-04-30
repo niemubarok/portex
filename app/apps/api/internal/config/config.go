@@ -25,10 +25,9 @@ type StorageConfig struct {
 type Config struct {
 	AppName     string
 	AppEnv      string
-	Port        string
-	AppURL      string
-	DatabaseURL string
-	DBLogLevel  string
+	Port               string
+	AppURL             string
+	DBConnectionString string
 
 	JWTSecret        string
 	JWTAccessExpiry  time.Duration
@@ -84,10 +83,9 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		AppName:     getEnv("APP_NAME", "app"),
 		AppEnv:      getEnv("APP_ENV", "development"),
-		Port:        getEnv("PORT", getEnv("APP_PORT", "8080")),
-		AppURL:      getEnv("APP_URL", "http://localhost:8080"),
-		DatabaseURL: getEnv("DATABASE_URL", "e-document-portal.db"),
-		DBLogLevel:  getEnv("DB_LOG_LEVEL", "warn"),
+		Port:               getEnv("PORT", getEnv("APP_PORT", "8080")),
+		AppURL:             getEnv("APP_URL", "http://localhost:8080"),
+		DBConnectionString: getEnv("DB_CONNECTION_STRING", "e-document-portal.db"),
 
 		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
 		JWTAccessExpiry:  parseDuration(getEnv("JWT_ACCESS_EXPIRY", "15m")),

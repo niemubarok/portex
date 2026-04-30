@@ -31,13 +31,13 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Connect to database
-	db, err := database.Connect(cfg.DatabaseURL, cfg.DBLogLevel)
+	// Connect to database (Using DBConnectionString to bypass SnapDeploy auto-provisioner)
+	db, err := database.Connect(cfg.DBConnectionString, cfg.DBLogLevel)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// ── Phase 4 Services ─────────────────────────────────────────
+	// ── Phase 4 Services (Stateless Mode) ─────────────────────────
 
 	// File storage (S3-compatible)
 	var storageService *storage.Storage
@@ -110,14 +110,6 @@ func main() {
 	// Start server in goroutine
 	go func() {
 		log.Printf("Server starting on port %s", cfg.Port)
-		log.Printf("GORM Studio available at http://localhost:%s/studio", cfg.Port)
-		log.Printf("API Documentation at http://localhost:%s/docs", cfg.Port)
-		if cfg.PulseEnabled {
-			log.Printf("Pulse dashboard at http://localhost:%s/pulse/ui/", cfg.Port)
-		}
-		if cfg.SentinelEnabled {
-			log.Printf("Sentinel dashboard at http://localhost:%s/sentinel/ui", cfg.Port)
-		}
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed: %v", err)
 		}
