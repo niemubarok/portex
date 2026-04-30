@@ -17,11 +17,8 @@ import (
 	"github.com/markbates/goth/providers/google"
 
 	"app/apps/api/internal/ai"
-	"app/apps/api/internal/cache"
 	"app/apps/api/internal/config"
-	"app/apps/api/internal/cron"
 	"app/apps/api/internal/database"
-	"app/apps/api/internal/jobs"
 	"app/apps/api/internal/mail"
 	"app/apps/api/internal/routes"
 	"app/apps/api/internal/storage"
@@ -34,25 +31,13 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Connect to database
-	db, err := database.Connect(cfg.DatabaseURL)
+	// Connect to database (Using DBConnectionString to bypass SnapDeploy auto-provisioner)
+	db, err := database.Connect(cfg.DBConnectionString, cfg.DBLogLevel)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// ── Phase 4 Services ─────────────────────────────────────────
-
-	// Redis cache
-	var cacheService *cache.Cache
-	if cfg.CACHE_REDIS_URL != "" {
-		c, err := cache.New(cfg.CACHE_REDIS_URL)
-		if err != nil {
-			log.Printf("Warning: Redis unavailable: %v (caching disabled)", err)
-		} else {
-			cacheService = c
-			log.Println("Redis cache connected")
-		}
-	}
+	// ── Phase 4 Services (Stateless Mode) ─────────────────────────
 
 	// File storage (S3-compatible)
 	var storageService *storage.Storage
@@ -82,18 +67,6 @@ func main() {
 		log.Printf("AI service configured via AI Gateway (%s)", cfg.AIGatewayModel)
 	}
 
-	// Background jobs (asynq)
-	var jobClient *jobs.Client
-	if cfg.CACHE_REDIS_URL != "" {
-		jc, err := jobs.NewClient(cfg.CACHE_REDIS_URL)
-		if err != nil {
-			log.Printf("Warning: Job queue unavailable: %v", err)
-		} else {
-			jobClient = jc
-			log.Println("Job queue connected")
-		}
-	}
-
 	// OAuth2 social login providers
 	gothic.Store = sessions.NewCookieStore([]byte(cfg.JWTSecret))
 	var oauthProviders []goth.Provider
@@ -117,48 +90,13 @@ func main() {
 
 	// Build services
 	svc := &routes.Services{
-		Cache:   cacheService,
 		Storage: storageService,
 		Mailer:  mailer,
 		AI:      aiService,
-		Jobs:    jobClient,
 	}
 
 	// Setup router
 	router := routes.Setup(db, cfg, svc)
-
-	// Start background worker
-	var workerStop func()
-	if cfg.CACHE_REDIS_URL != "" {
-		stop, err := jobs.StartWorker(cfg.CACHE_REDIS_URL, jobs.WorkerDeps{
-			DB:      db,
-			Mailer:  mailer,
-			Storage: storageService,
-			Cache:   cacheService,
-		})
-		if err != nil {
-			log.Printf("Warning: Background worker failed to start: %v", err)
-		} else {
-			workerStop = stop
-			log.Println("Background worker started")
-		}
-	}
-
-	// Start cron scheduler
-	var cronScheduler *cron.Scheduler
-	if cfg.CACHE_REDIS_URL != "" {
-		cs, err := cron.New(cfg.CACHE_REDIS_URL)
-		if err != nil {
-			log.Printf("Warning: Cron scheduler failed to start: %v", err)
-		} else {
-			cronScheduler = cs
-			if err := cs.Start(); err != nil {
-				log.Printf("Warning: Cron scheduler failed to start: %v", err)
-			} else {
-				log.Println("Cron scheduler started")
-			}
-		}
-	}
 
 	// Create server
 	srv := &http.Server{
@@ -172,14 +110,6 @@ func main() {
 	// Start server in goroutine
 	go func() {
 		log.Printf("Server starting on port %s", cfg.Port)
-		log.Printf("GORM Studio available at http://localhost:%s/studio", cfg.Port)
-		log.Printf("API Documentation at http://localhost:%s/docs", cfg.Port)
-		if cfg.PulseEnabled {
-			log.Printf("Pulse dashboard at http://localhost:%s/pulse/ui/", cfg.Port)
-		}
-		if cfg.SentinelEnabled {
-			log.Printf("Sentinel dashboard at http://localhost:%s/sentinel/ui", cfg.Port)
-		}
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed: %v", err)
 		}
@@ -191,26 +121,6 @@ func main() {
 	<-quit
 
 	log.Println("Shutting down server...")
-
-	// Stop cron scheduler
-	if cronScheduler != nil {
-		cronScheduler.Stop()
-	}
-
-	// Stop background worker
-	if workerStop != nil {
-		workerStop()
-	}
-
-	// Close job client
-	if jobClient != nil {
-		jobClient.Close()
-	}
-
-	// Close cache connection
-	if cacheService != nil {
-		cacheService.Close()
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
