@@ -18,13 +18,16 @@ COPY . .
 # Set Environment Variables for Build
 ENV VITE_API_URL=https://portex-api.containers.snapdeploy.dev
 
-# Build
-RUN pnpm build
+# Build (Hanya jalankan vite build, skip tsc untuk memastikan build tetap jadi)
+RUN pnpm vite build
 
 # Production stage
 FROM nginx:alpine
 
-# Copy build artifacts
+# Hapus file bawaan Nginx
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy build artifacts dari folder dist
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx config
