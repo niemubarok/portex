@@ -33,7 +33,7 @@ type Config struct {
 	JWTAccessExpiry  time.Duration
 	JWTRefreshExpiry time.Duration
 
-	RedisURL string
+	CACHE_REDIS_URL string
 
 	// Phase 4 Services Config
 	Storage StorageConfig
@@ -91,7 +91,7 @@ func Load() (*Config, error) {
 		JWTAccessExpiry:  parseDuration(getEnv("JWT_ACCESS_EXPIRY", "15m")),
 		JWTRefreshExpiry: parseDuration(getEnv("JWT_REFRESH_EXPIRY", "168h")),
 
-		RedisURL: getEnv("REDIS_URL", ""),
+		CACHE_REDIS_URL: getEnv("CACHE_REDIS_URL", ""),
 
 		Storage: StorageConfig{
 			Driver:    getEnv("STORAGE_DRIVER", "local"),

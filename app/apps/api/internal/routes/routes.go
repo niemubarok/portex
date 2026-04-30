@@ -203,7 +203,7 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 		AI: svc.AI,
 	}
 	jobsHandler := &handlers.JobsHandler{
-		RedisURL: cfg.RedisURL,
+		RedisURL: cfg.CACHE_REDIS_URL,
 	}
 	cronHandler := &handlers.CronHandler{}
 	blogHandler := handlers.NewBlogHandler(db)

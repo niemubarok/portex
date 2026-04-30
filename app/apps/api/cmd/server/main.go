@@ -44,8 +44,8 @@ func main() {
 
 	// Redis cache
 	var cacheService *cache.Cache
-	if cfg.RedisURL != "" {
-		c, err := cache.New(cfg.RedisURL)
+	if cfg.CACHE_REDIS_URL != "" {
+		c, err := cache.New(cfg.CACHE_REDIS_URL)
 		if err != nil {
 			log.Printf("Warning: Redis unavailable: %v (caching disabled)", err)
 		} else {
@@ -84,8 +84,8 @@ func main() {
 
 	// Background jobs (asynq)
 	var jobClient *jobs.Client
-	if cfg.RedisURL != "" {
-		jc, err := jobs.NewClient(cfg.RedisURL)
+	if cfg.CACHE_REDIS_URL != "" {
+		jc, err := jobs.NewClient(cfg.CACHE_REDIS_URL)
 		if err != nil {
 			log.Printf("Warning: Job queue unavailable: %v", err)
 		} else {
@@ -129,8 +129,8 @@ func main() {
 
 	// Start background worker
 	var workerStop func()
-	if cfg.RedisURL != "" {
-		stop, err := jobs.StartWorker(cfg.RedisURL, jobs.WorkerDeps{
+	if cfg.CACHE_REDIS_URL != "" {
+		stop, err := jobs.StartWorker(cfg.CACHE_REDIS_URL, jobs.WorkerDeps{
 			DB:      db,
 			Mailer:  mailer,
 			Storage: storageService,
@@ -146,8 +146,8 @@ func main() {
 
 	// Start cron scheduler
 	var cronScheduler *cron.Scheduler
-	if cfg.RedisURL != "" {
-		cs, err := cron.New(cfg.RedisURL)
+	if cfg.CACHE_REDIS_URL != "" {
+		cs, err := cron.New(cfg.CACHE_REDIS_URL)
 		if err != nil {
 			log.Printf("Warning: Cron scheduler failed to start: %v", err)
 		} else {
