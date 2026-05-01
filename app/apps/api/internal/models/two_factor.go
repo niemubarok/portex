@@ -1,21 +1,45 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
+// JSONSlice is a custom type for storing slices as JSON in the database
+type JSONSlice []string
+
+func (j JSONSlice) Value() (driver.Value, error) {
+	if len(j) == 0 {
+		return "[]", nil
+	}
+	return json.Marshal(j)
+}
+
+func (j *JSONSlice) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		str, ok := value.(string)
+		if !ok {
+			return errors.New("type assertion to []byte or string failed")
+		}
+		bytes = []byte(str)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
 // TwoFactorConfig stores TOTP settings for a user.
 type TwoFactorConfig struct {
-	ID          uint                       `gorm:"primarykey" json:"id"`
-	UserID      string                     `gorm:"size:36;uniqueIndex;not null" json:"user_id"`
-	Secret      string                     `gorm:"size:255;not null" json:"-"`
-	Enabled     bool                       `gorm:"default:false" json:"enabled"`
-	BackupCodes datatypes.JSONSlice[string] `gorm:"type:text" json:"-"`
-	CreatedAt   time.Time                  `json:"created_at"`
-	UpdatedAt   time.Time                  `json:"updated_at"`
+	ID          uint           `gorm:"primarykey" json:"id"`
+	UserID      string         `gorm:"size:36;uniqueIndex;not null" json:"user_id"`
+	Secret      string         `gorm:"size:255;not null" json:"-"`
+	Enabled     bool           `gorm:"default:false" json:"enabled"`
+	BackupCodes JSONSlice      `gorm:"type:text" json:"-"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 // TrustedDevice stores a remembered device that can skip TOTP.
