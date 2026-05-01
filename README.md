@@ -67,5 +67,18 @@ Copy `.env.example` to `.env` in the `app` directory and fill in your credential
 
 Detailed deployment instructions for SnapDeploy.dev and Supabase can be found in the [deployment guide](docs/deployment_guide.md).
 
+### ☁️ Leapcell Deployment
+For deploying the API to [Leapcell](https://leapcell.io):
+1. **Service Type**: Web Service.
+2. **Deployment Method**: GitHub (this repo).
+3. **Root Directory**: `.` (The root of the repo).
+4. **Leapcell will detect the `Dockerfile`** in the root and use it automatically.
+5. Ensure you set the following **Environment Variables**:
+   - `DATABASE_URL`: Your Supabase connection string.
+   - `JWT_SECRET`: Your secret key.
+   - `STORAGE_DRIVER`: `s3` (for Supabase/MinIO) or `local`.
+   - `PORT`: `8080`.
+
+
 ---
 *Built with ❤️ by PortEx Team*

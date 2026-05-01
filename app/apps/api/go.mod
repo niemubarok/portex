@@ -1,6 +1,6 @@
 module app/apps/api
 
-go 1.25.0
+go 1.24.0
 
 require (
 	github.com/MUKE-coder/gin-docs v0.0.0-20260222113017-4d647cb4e7aa
