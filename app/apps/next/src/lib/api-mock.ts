@@ -43,11 +43,12 @@ export function setupApiMock(api: AxiosInstance) {
       mockResponse = success({
         user: user || {
           id: `demo-${role.toLowerCase()}`,
-          first_name: 'Demo',
-          last_name: role.charAt(0).toUpperCase() + role.slice(1).toLowerCase(),
+          firstName: 'Demo',
+          lastName: role.charAt(0).toUpperCase() + role.slice(1).toLowerCase(),
           email: data.email || `${role.toLowerCase()}@portex.app`,
           role: role,
           active: true,
+          createdAt: new Date().toISOString()
         },
         tokens: { access_token: 'demo-token', refresh_token: 'demo-refresh' }
       });
@@ -135,7 +136,7 @@ export function setupApiMock(api: AxiosInstance) {
     else if (url?.includes('/approve') && method === 'post') {
       const parts = url.split('/');
       const id = parts[parts.indexOf('documents') + 1];
-      const updated = demoDB.update('documents', id, { 
+      const updated = demoDB.update<any>('documents', id, { 
         status: 'Approved',
         managerNotes: data.notes 
       });
@@ -177,7 +178,7 @@ export function setupApiMock(api: AxiosInstance) {
         }
       }
 
-      const updated = demoDB.update('documents', id, { status: 'Locked' });
+      const updated = demoDB.update<any>('documents', id, { status: 'Locked' });
       
       demoDB.insert('audit_logs', {
         id: uuidv4(),
@@ -192,7 +193,7 @@ export function setupApiMock(api: AxiosInstance) {
     }
 
     // --- AUDIT LOGS ---
-    else if (url?.includes('/audit_logs') && method === 'get') {
+    else if (url?.includes('/audit-logs') && method === 'get') {
       const logs = demoDB.get<any>('audit_logs');
       if (params?.documentId) {
         mockResponse = success(logs.filter((l: any) => l.documentId === params.documentId));

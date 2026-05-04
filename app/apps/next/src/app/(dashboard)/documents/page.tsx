@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useDocuments, useDeleteDocument, useApproveDocument, Document } from '@/hooks/use-documents'
@@ -10,7 +10,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { DocumentDetailModal } from '@/components/document-detail-modal'
 import { Search, Filter, Plus, FileText, Trash2, Edit3, Eye } from 'lucide-react'
 
-export default function DocumentsPage() {
+function DocumentsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const q = searchParams.get('q') || undefined
@@ -175,5 +175,17 @@ export default function DocumentsPage() {
         isLoading={deleteDoc.isPending || approveDoc.isPending}
       />
     </div>
+  )
+}
+
+export default function DocumentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="h-8 w-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <DocumentsContent />
+    </Suspense>
   )
 }

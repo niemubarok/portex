@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useDocuments, Document } from '@/hooks/use-documents'
@@ -10,7 +10,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { DocumentDetailModal } from '@/components/document-detail-modal'
 import { Shield, Activity, FileText, AlertCircle, CheckCircle2, Clock, History, Search } from 'lucide-react'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const docId = searchParams.get('docId')
@@ -67,7 +67,7 @@ export default function DashboardPage() {
               </div>
               <h1 className="text-3xl font-bold tracking-tight">Audit & Compliance</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Selamat datang, <span className="font-medium text-foreground">{user.first_name} {user.last_name}</span>. Sistem dalam kondisi <span className="text-success font-bold">OPTIMAL</span>.
+                Selamat datang, <span className="font-medium text-foreground">{user.firstName} {user.lastName}</span>. Sistem dalam kondisi <span className="text-success font-bold">OPTIMAL</span>.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-secondary-foreground truncate">{log.details}</p>
                         <p className="text-[10px] text-muted-foreground mt-1">
                           Oleh: <span className="font-medium text-foreground">
-                            {log.user ? `${log.user.first_name} ${log.user.last_name}` : (log.userId || 'System')}
+                            {log.user ? `${log.user.firstName} ${log.user.lastName}` : (log.userId || 'System')}
                           </span> • IP: {log.ipAddress}
                         </p>
                         {log.documentId && (
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Selamat datang, <span className="font-medium text-foreground">{user.first_name} {user.last_name}</span>
+                Selamat datang, <span className="font-medium text-foreground">{user.firstName} {user.lastName}</span>
                 <span className="mx-2 text-border">·</span>
                 <span className="text-accent">{ROLE_LABELS[user.role] || user.role}</span>
               </p>
@@ -346,5 +346,17 @@ export default function DashboardPage() {
         }} 
       />
     </>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="h-8 w-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
+import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib'
 import QRCode from 'qrcode'
 import fs from 'fs'
 import path from 'path'
@@ -24,7 +24,7 @@ export async function addWatermarkAndQR(inputBuffer: Buffer, qrText: string, wat
       font,
       color: rgb(0.5, 0.5, 0.5),
       opacity: 0.15,
-      rotate: { type: 'degrees', angle: 45 },
+      rotate: degrees(45),
     })
 
     // 2. Add QR Code at Bottom Right

@@ -33,8 +33,8 @@ export default function UsersPage() {
   
   // Form State
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'OFFICER',
@@ -80,16 +80,16 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter(u => 
     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.last_name.toLowerCase().includes(searchTerm.toLowerCase())
+    u.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.lastName.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleOpenModal = (user: User | null = null) => {
     if (user) {
       setEditingUser(user)
       setFormData({
-        first_name: user.first_name,
-        last_name: user.last_name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         password: '', // Don't show password
         role: user.role,
@@ -98,8 +98,8 @@ export default function UsersPage() {
     } else {
       setEditingUser(null)
       setFormData({
-        first_name: '',
-        last_name: '',
+        firstName: '',
+        lastName: '',
         email: '',
         password: '',
         role: 'OFFICER',
@@ -135,7 +135,7 @@ export default function UsersPage() {
     setConfirmState({
       isOpen: true,
       title: 'Hapus User',
-      message: `Apakah Anda yakin ingin menghapus user ${user.first_name} ${user.last_name}? Pengguna ini akan kehilangan akses ke sistem.`,
+      message: `Apakah Anda yakin ingin menghapus user ${user.firstName} ${user.lastName}? Pengguna ini akan kehilangan akses ke sistem.`,
       type: 'danger',
       confirmText: 'Ya, Hapus',
       onConfirm: async () => {
@@ -235,10 +235,10 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-card to-muted border border-border flex items-center justify-center text-accent font-bold shadow-inner">
-                          {u.first_name?.[0] || '?'}{u.last_name?.[0] || ''}
+                          {u.firstName?.[0] || '?'}{u.lastName?.[0] || ''}
                         </div>
                         <div>
-                          <div className="font-bold text-foreground">{u.first_name} {u.last_name}</div>
+                          <div className="font-bold text-foreground">{u.firstName} {u.lastName}</div>
                           <div className="text-xs text-muted-foreground flex items-center gap-1">
                             <Mail size={12} />
                             {u.email}
@@ -266,7 +266,7 @@ export default function UsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-muted-foreground text-xs">
-                      {new Date(u.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(u.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -315,8 +315,8 @@ export default function UsersPage() {
                   <input
                     required
                     type="text"
-                    value={formData.first_name}
-                    onChange={e => setFormData({...formData, first_name: e.target.value})}
+                    value={formData.firstName}
+                    onChange={e => setFormData({...formData, firstName: e.target.value})}
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent transition-all"
                   />
                 </div>
@@ -325,8 +325,8 @@ export default function UsersPage() {
                   <input
                     required
                     type="text"
-                    value={formData.last_name}
-                    onChange={e => setFormData({...formData, last_name: e.target.value})}
+                    value={formData.lastName}
+                    onChange={e => setFormData({...formData, lastName: e.target.value})}
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-accent transition-all"
                   />
                 </div>

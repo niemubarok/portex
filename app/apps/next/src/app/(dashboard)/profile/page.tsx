@@ -39,7 +39,7 @@ export default function ProfilePage() {
     AUDITOR: 'Auditor External/Internal',
   }
 
-  const joinDate = user.created_at ? new Date(user.created_at) : new Date()
+  const joinDate = user.createdAt ? new Date(user.createdAt) : new Date()
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -52,7 +52,7 @@ export default function ProfilePage() {
         <div className="relative pt-16 pb-8 px-8 flex flex-col md:flex-row items-end gap-6">
           <div className="relative shrink-0 group">
             <div className="h-32 w-32 rounded-2xl bg-gradient-to-tr from-card to-muted border-4 border-muted/50 flex items-center justify-center text-4xl text-accent font-black shadow-2xl transition-transform group-hover:scale-105 duration-300">
-              {user?.first_name?.[0] || '?'}
+              {user?.firstName?.[0] || '?'}
             </div>
             <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-xl bg-background border border-border flex items-center justify-center text-accent shadow-lg cursor-pointer hover:bg-accent hover:text-white transition-all">
               <Edit3 size={18} />
@@ -71,7 +71,7 @@ export default function ProfilePage() {
                 </span>
               )}
             </div>
-            <h1 className="text-3xl font-black tracking-tight">{user.first_name} {user.last_name}</h1>
+            <h1 className="text-3xl font-black tracking-tight">{user.firstName} {user.lastName}</h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2 font-medium">
               <Mail size={14} className="text-muted-foreground/60" />
               {user.email}

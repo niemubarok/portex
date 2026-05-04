@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
@@ -20,7 +20,7 @@ import {
   X
 } from 'lucide-react'
 
-export default function AuditLogsPage() {
+function AuditLogsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const q = searchParams.get('q') || undefined
@@ -203,7 +203,7 @@ export default function AuditLogsPage() {
                       <div className="flex items-center gap-2 text-foreground">
                         <UserIcon size={14} className="text-muted-foreground" />
                         <span className="font-medium truncate max-w-[150px]">
-                          {log.user ? `${log.user.first_name} ${log.user.last_name}` : (log.userId || 'System')}
+                          {log.user ? `${log.user.firstName} ${log.user.lastName}` : (log.userId || 'System')}
                         </span>
                       </div>
                       {log.user && (
@@ -258,5 +258,17 @@ export default function AuditLogsPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AuditLogsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="h-8 w-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <AuditLogsContent />
+    </Suspense>
   )
 }

@@ -60,7 +60,7 @@ export default function EditDocumentPage() {
   useEffect(() => {
     if (document) {
       const user = auth.getUser()
-      const isOwner = String(document.uploader_id) === user?.id
+      const isOwner = String(document.uploaderId) === user?.id
       const isAdmin = user?.role === 'ADMIN'
 
       if (document.status !== 'Draft' || (!isAdmin && !isOwner)) {
@@ -172,10 +172,10 @@ export default function EditDocumentPage() {
               accept=".pdf,.doc,.docx" 
               onChange={handleFileValueChange('po_file')} 
               currentFile={files.po_file}
-              existingPath={document?.po_path}
+              existingPath={document?.poPath}
               label="Pilih atau drop file PO baru"
             />
-            <FilePreview path={document?.po_path} docId={id} type="po" downloadMutation={downloadDoc} />
+            <FilePreview path={document?.poPath} docId={id} type="po" downloadMutation={downloadDoc} />
           </div>
         </div>
 
@@ -190,9 +190,9 @@ export default function EditDocumentPage() {
                 accept=".pdf,.doc,.docx" 
                 onChange={handleFileValueChange('invoice_file')} 
                  currentFile={files.invoice_file}
-                existingPath={document?.invoice_path}
+                existingPath={document?.invoicePath}
               />
-              <FilePreview path={document?.invoice_path} docId={id} type="invoice" downloadMutation={downloadDoc} />
+              <FilePreview path={document?.invoicePath} docId={id} type="invoice" downloadMutation={downloadDoc} />
             </div>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">File Packing List</label>
@@ -200,9 +200,9 @@ export default function EditDocumentPage() {
                 accept=".pdf,.doc,.docx" 
                 onChange={handleFileValueChange('packing_list_file')} 
                 currentFile={files.packing_list_file}
-                existingPath={document?.packing_list_path}
+                existingPath={document?.packingListPath}
               />
-              <FilePreview path={document?.packing_list_path} docId={id} type="packing_list" downloadMutation={downloadDoc} />
+              <FilePreview path={document?.packingListPath} docId={id} type="packing_list" downloadMutation={downloadDoc} />
             </div>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">File PEB</label>
@@ -210,9 +210,9 @@ export default function EditDocumentPage() {
                 accept=".pdf,.doc,.docx" 
                 onChange={handleFileValueChange('peb_file')} 
                 currentFile={files.peb_file}
-                existingPath={document?.peb_path}
+                existingPath={document?.pebPath}
               />
-              <FilePreview path={document?.peb_path} docId={id} type="peb" downloadMutation={downloadDoc} />
+              <FilePreview path={document?.pebPath} docId={id} type="peb" downloadMutation={downloadDoc} />
             </div>
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">File Bill of Lading (B/L)</label>
@@ -220,9 +220,9 @@ export default function EditDocumentPage() {
                 accept=".pdf,.doc,.docx" 
                 onChange={handleFileValueChange('bl_file')} 
                 currentFile={files.bl_file}
-                existingPath={document?.bl_path}
+                existingPath={document?.blPath}
               />
-              <FilePreview path={document?.bl_path} docId={id} type="bl" downloadMutation={downloadDoc} />
+              <FilePreview path={document?.blPath} docId={id} type="bl" downloadMutation={downloadDoc} />
             </div>
           </div>
 
@@ -232,9 +232,9 @@ export default function EditDocumentPage() {
               accept=".pdf,.doc,.docx" 
               onChange={handleFileValueChange('other_file')} 
               currentFile={files.other_file}
-              existingPath={document?.other_path}
+              existingPath={document?.otherPath}
             />
-            <FilePreview path={document?.other_path} docId={id} type="other" downloadMutation={downloadDoc} />
+            <FilePreview path={document?.otherPath} docId={id} type="other" downloadMutation={downloadDoc} />
           </div>
         </div>
 

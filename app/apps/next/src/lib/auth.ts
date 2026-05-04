@@ -1,14 +1,13 @@
-/// <reference types="vite/client" />
 import { api } from './api'
 
 export interface User {
   id: string
-  first_name: string
-  last_name: string
+  firstName: string
+  lastName: string
   email: string
   role: string
   active: boolean
-  created_at: string
+  createdAt: string
 }
 
 export interface TokenPair {
@@ -52,8 +51,14 @@ export const auth = {
     return user as User
   },
 
-  register: async (data: { first_name: string; last_name: string; email: string; password: string }) => {
-    const res = await api.post('/api/auth/register', data)
+  register: async (data: { firstName: string; lastName: string; email: string; password: string }) => {
+    const { firstName, lastName, email, password } = data
+    const res = await api.post('/api/auth/register', { 
+      first_name: firstName, 
+      last_name: lastName, 
+      email, 
+      password 
+    })
     const { user, tokens } = res.data.data
     auth.setSession(user, tokens)
     return user as User

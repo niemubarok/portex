@@ -6,8 +6,8 @@ export interface AuditLog {
   action: string
   userId: string
   user?: {
-    first_name: string
-    last_name: string
+    firstName: string
+    lastName: string
     email: string
     role: string
   }

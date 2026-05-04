@@ -243,11 +243,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="p-4 border-t border-border/50 bg-muted/5 shrink-0 overflow-hidden">
           <div className={`flex items-center ${(sidebarOpen || mobileSidebarOpen) ? 'gap-3' : 'justify-center'}`}>
             <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-tr from-card to-muted border border-border flex items-center justify-center text-accent font-bold shadow-inner">
-              {user?.first_name?.[0] || '?'}
+              {user?.firstName?.[0] || '?'}
             </div>
             {(sidebarOpen || mobileSidebarOpen) && (
               <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
-                <p className="text-sm font-bold truncate leading-tight">{user?.first_name} {user?.last_name}</p>
+                <p className="text-sm font-bold truncate leading-tight">{user?.firstName} {user?.lastName}</p>
                 <p className="text-[10px] text-accent font-bold uppercase tracking-wider truncate">{user?.role}</p>
               </div>
             )}
@@ -365,11 +365,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="flex items-center gap-2 lg:gap-3 pl-2 pr-1 py-1 rounded-2xl hover:bg-muted transition-all border border-transparent hover:border-border"
               >
                 <div className="flex flex-col items-end hidden lg:flex">
-                  <span className="text-sm font-bold text-foreground leading-none mb-1">{user?.first_name}</span>
+                  <span className="text-sm font-bold text-foreground leading-none mb-1">{user?.firstName}</span>
                   <span className="text-[10px] text-accent font-bold uppercase tracking-widest">{user?.role}</span>
                 </div>
                 <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-xl bg-gradient-to-tr from-card to-muted border border-border flex items-center justify-center text-accent font-bold shadow-inner text-sm shrink-0">
-                  {user?.first_name?.[0] || '?'}
+                  {user?.firstName?.[0] || '?'}
                 </div>
                 <ChevronDown size={14} className={`text-muted-foreground transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -377,7 +377,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-56 bg-background border border-border rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                   <div className="px-4 py-2 border-b border-border/50 mb-2 lg:hidden">
-                    <p className="text-sm font-bold truncate">{user?.first_name} {user?.last_name}</p>
+                    <p className="text-sm font-bold truncate">{user?.firstName} {user?.lastName}</p>
                     <p className="text-[10px] text-accent font-bold uppercase">{user?.role}</p>
                   </div>
                   <Link href="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-secondary-foreground hover:text-foreground hover:bg-muted transition-colors">

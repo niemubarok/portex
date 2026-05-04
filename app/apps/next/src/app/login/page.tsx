@@ -14,8 +14,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
   })
@@ -148,8 +148,8 @@ export default function LoginPage() {
                       <input
                         type="text"
                         required
-                        value={form.first_name}
-                        onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
+                        value={form.firstName}
+                        onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
                         className="w-full bg-muted/50 border border-border rounded-xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all placeholder:text-muted-foreground/50"
                         placeholder="John"
                       />
@@ -162,8 +162,8 @@ export default function LoginPage() {
                       <input
                         type="text"
                         required
-                        value={form.last_name}
-                        onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))}
+                        value={form.lastName}
+                        onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
                         className="w-full bg-muted/50 border border-border rounded-xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all placeholder:text-muted-foreground/50"
                         placeholder="Doe"
                       />

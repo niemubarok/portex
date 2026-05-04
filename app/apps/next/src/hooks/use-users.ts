@@ -16,7 +16,12 @@ export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (data: Partial<User> & { password?: string }) => {
-      const res = await api.post('/api/users', data)
+      const { firstName, lastName, ...rest } = data as any
+      const res = await api.post('/api/users', {
+        ...rest,
+        first_name: firstName,
+        last_name: lastName,
+      })
       return res.data.data
     },
     onSuccess: () => {
@@ -29,7 +34,12 @@ export function useUpdateUser() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<User> & { password?: string } }) => {
-      const res = await api.put('/api/users/' + id, data)
+      const { firstName, lastName, ...rest } = data as any
+      const res = await api.put('/api/users/' + id, {
+        ...rest,
+        first_name: firstName,
+        last_name: lastName,
+      })
       return res.data.data
     },
     onSuccess: () => {
