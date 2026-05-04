@@ -16,7 +16,10 @@ export function setupApiMock(api: AxiosInstance) {
 
   // Intercept requests and return mock data via adapter
   api.interceptors.request.use(async (config) => {
-    const { url, method, data, params } = config;
+    // Normalize URL: remove origin if present, remove leading slash for consistency
+    let url = config.url || '';
+    const method = config.method?.toLowerCase();
+    const { data, params } = config;
 
     // Helper for successful response
     const success = (data: any) => ({
@@ -30,7 +33,7 @@ export function setupApiMock(api: AxiosInstance) {
     let mockResponse: any = null;
 
     // --- AUTH ---
-    if (url === '/api/auth/login' && method === 'post') {
+    if (url.includes('/api/auth/login') && method === 'post') {
       const users = demoDB.get<any>('users');
       const user = users.find((u: any) => u.email === data.email);
       
@@ -54,13 +57,30 @@ export function setupApiMock(api: AxiosInstance) {
       });
     }
 
+    else if (url.includes('/api/auth/register') && method === 'post') {
+      const newUser = {
+        id: uuidv4(),
+        ...data,
+        firstName: data.first_name || data.firstName,
+        lastName: data.last_name || data.lastName,
+        role: 'OFFICER',
+        active: true,
+        createdAt: new Date().toISOString()
+      };
+      demoDB.insert('users', newUser);
+      mockResponse = success({
+        user: newUser,
+        tokens: { access_token: 'demo-token', refresh_token: 'demo-refresh' }
+      });
+    }
+
     // --- DOCUMENTS ---
-    else if (url === '/api/documents' && method === 'get') {
+    else if (url.endsWith('/api/documents') && method === 'get') {
       const docs = demoDB.get<any>('documents');
       mockResponse = success(docs);
     }
 
-    else if (url === '/api/documents' && method === 'post') {
+    else if (url.endsWith('/api/documents') && method === 'post') {
       let docData: any = {};
       
       if (data instanceof FormData) {
@@ -106,14 +126,15 @@ export function setupApiMock(api: AxiosInstance) {
       mockResponse = success(newDoc);
     }
 
-    else if (url?.startsWith('/api/documents/') && method === 'get' && !url.includes('/download')) {
-      const id = url.split('/').pop();
+    else if (url.includes('/api/documents/') && method === 'get' && !url.includes('/download')) {
+      const parts = url.split('/');
+      const id = parts[parts.indexOf('documents') + 1];
       const docs = demoDB.get<any>('documents');
       const doc = docs.find((d: any) => d.id === id);
       mockResponse = success(doc);
     }
 
-    else if (url?.includes('/download') && method === 'get') {
+    else if (url.includes('/download') && method === 'get') {
       const parts = url.split('/');
       const id = parts[parts.indexOf('documents') + 1];
       const type = params?.type || 'po';
@@ -133,7 +154,7 @@ export function setupApiMock(api: AxiosInstance) {
       }
     }
 
-    else if (url?.includes('/approve') && method === 'post') {
+    else if (url.includes('/approve') && method === 'post') {
       const parts = url.split('/');
       const id = parts[parts.indexOf('documents') + 1];
       const updated = demoDB.update<any>('documents', id, { 
@@ -153,7 +174,7 @@ export function setupApiMock(api: AxiosInstance) {
       mockResponse = success(updated);
     }
 
-    else if (url?.includes('/lock') && method === 'post') {
+    else if (url.includes('/lock') && method === 'post') {
       const parts = url.split('/');
       const id = parts[parts.indexOf('documents') + 1];
       
@@ -193,7 +214,7 @@ export function setupApiMock(api: AxiosInstance) {
     }
 
     // --- AUDIT LOGS ---
-    else if (url?.includes('/audit-logs') && method === 'get') {
+    else if ((url.includes('/api/audit_logs') || url.includes('/api/audit-logs')) && method === 'get') {
       const logs = demoDB.get<any>('audit_logs');
       if (params?.documentId) {
         mockResponse = success(logs.filter((l: any) => l.documentId === params.documentId));
@@ -203,13 +224,44 @@ export function setupApiMock(api: AxiosInstance) {
     }
 
     // --- USERS ---
-    else if (url === '/api/users' && method === 'get') {
+    else if (url.includes('/api/users') && method === 'get') {
       const users = demoDB.get<any>('users');
       mockResponse = success(users);
     }
 
+    else if (url.endsWith('/api/users') && method === 'post') {
+      const newUser = {
+        id: uuidv4(),
+        ...data,
+        firstName: data.first_name || data.firstName,
+        lastName: data.last_name || data.lastName,
+        active: true,
+        createdAt: new Date().toISOString()
+      };
+      demoDB.insert('users', newUser);
+      mockResponse = success(newUser);
+    }
+
+    else if (url.includes('/api/users/') && (method === 'put' || method === 'patch')) {
+      const parts = url.split('/');
+      const id = parts[parts.indexOf('users') + 1];
+      const updated = demoDB.update<any>('users', id, {
+        ...data,
+        firstName: data.first_name || data.firstName,
+        lastName: data.last_name || data.lastName,
+      });
+      mockResponse = success(updated);
+    }
+
+    else if (url.includes('/api/users/') && method === 'delete') {
+      const parts = url.split('/');
+      const id = parts[parts.indexOf('users') + 1];
+      demoDB.delete('users', id);
+      mockResponse = success({ success: true });
+    }
+
     // --- SETTINGS ---
-    else if (url === '/api/settings' && method === 'get') {
+    else if (url.includes('/api/settings') && method === 'get') {
       const settings = demoDB.get<any>('settings');
       if (settings.length === 0) {
         mockResponse = success([
@@ -219,6 +271,28 @@ export function setupApiMock(api: AxiosInstance) {
       } else {
         mockResponse = success(settings);
       }
+    }
+
+    else if (url.includes('/api/settings') && method === 'put') {
+      // Data is Record<string, string>
+      const newSettings = Object.entries(data).map(([key, value]) => ({ key, value: String(value) }));
+      demoDB.set('settings', newSettings);
+      mockResponse = success(newSettings);
+    }
+
+    // --- OTHER DOCUMENT ACTIONS ---
+    else if (url.includes('/api/documents/') && (method === 'put' || method === 'patch')) {
+      const parts = url.split('/');
+      const id = parts[parts.indexOf('documents') + 1];
+      const updated = demoDB.update<any>('documents', id, data);
+      mockResponse = success(updated);
+    }
+
+    else if (url.includes('/api/documents/') && method === 'delete') {
+      const parts = url.split('/');
+      const id = parts[parts.indexOf('documents') + 1];
+      demoDB.delete('documents', id);
+      mockResponse = success({ success: true });
     }
 
     if (mockResponse) {
