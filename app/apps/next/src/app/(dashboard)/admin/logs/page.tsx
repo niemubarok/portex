@@ -36,8 +36,8 @@ export default function AuditLogsPage() {
   const { data: logs = [], isLoading } = useAuditLogs({
     search: q,
     action: actionFilter,
-    start_date: startDate ? `${startDate}T00:00:00Z` : undefined,
-    end_date: endDate ? `${endDate}T23:59:59Z` : undefined
+    startDate: startDate ? `${startDate}T00:00:00Z` : undefined,
+    endDate: endDate ? `${endDate}T23:59:59Z` : undefined
   })
 
   useEffect(() => {
@@ -185,11 +185,11 @@ export default function AuditLogsPage() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5 text-foreground font-medium">
                           <Calendar size={12} className="text-muted-foreground" />
-                          {new Date(log.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {new Date(log.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Clock size={12} />
-                          {new Date(log.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          {new Date(log.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </div>
                       </div>
                     </td>
@@ -203,7 +203,7 @@ export default function AuditLogsPage() {
                       <div className="flex items-center gap-2 text-foreground">
                         <UserIcon size={14} className="text-muted-foreground" />
                         <span className="font-medium truncate max-w-[150px]">
-                          {log.user ? `${log.user.first_name} ${log.user.last_name}` : (log.user_id || 'System')}
+                          {log.user ? `${log.user.first_name} ${log.user.last_name}` : (log.userId || 'System')}
                         </span>
                       </div>
                       {log.user && (
@@ -215,16 +215,16 @@ export default function AuditLogsPage() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-2 max-w-xs sm:max-w-md">
                         <div className="flex items-start gap-2">
-                          {log.document_id ? (
+                          {log.documentId ? (
                             <FileText size={14} className="text-accent mt-0.5 shrink-0" />
                           ) : (
                             <Activity size={14} className="text-muted-foreground mt-0.5 shrink-0" />
                           )}
                           <span className="text-xs text-secondary-foreground leading-relaxed">{log.details}</span>
                         </div>
-                        {log.document_id && (
+                        {log.documentId && (
                           <Link 
-                            href={`/dashboard?docId=${log.document_id}`}
+                            href={`/dashboard?docId=${log.documentId}`}
                             className="inline-flex items-center gap-1.5 text-[10px] font-bold text-accent hover:underline ml-5"
                           >
                             <ExternalLink size={10} />
@@ -236,7 +236,7 @@ export default function AuditLogsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-muted-foreground font-mono text-xs bg-muted px-2 py-1 rounded border border-border w-fit">
                         <Monitor size={12} />
-                        {log.ip_address}
+                        {log.ipAddress}
                       </div>
                     </td>
                   </tr>

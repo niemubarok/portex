@@ -155,16 +155,16 @@ export default function DashboardPage() {
                         <p className="text-sm text-secondary-foreground truncate">{log.details}</p>
                         <p className="text-[10px] text-muted-foreground mt-1">
                           Oleh: <span className="font-medium text-foreground">
-                            {log.user ? `${log.user.first_name} ${log.user.last_name}` : (log.user_id || 'System')}
-                          </span> • IP: {log.ip_address}
+                            {log.user ? `${log.user.first_name} ${log.user.last_name}` : (log.userId || 'System')}
+                          </span> • IP: {log.ipAddress}
                         </p>
-                        {log.document_id && (
+                        {log.documentId && (
                           <button 
                             onClick={() => {
-                              const doc = documents?.find(d => d.id === log.document_id)
+                              const doc = documents?.find(d => d.id === log.documentId)
                               setSelectedDoc(doc || null)
                               const params = new URLSearchParams(searchParams.toString())
-                              params.set('docId', log.document_id!)
+                              params.set('docId', log.documentId!)
                               router.push(`/dashboard?${params.toString()}`)
                             }}
                             className="text-[10px] font-bold text-accent mt-2 hover:underline flex items-center gap-1"

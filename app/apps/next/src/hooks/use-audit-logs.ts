@@ -4,29 +4,29 @@ import { api } from '@/lib/api'
 export interface AuditLog {
   id: string
   action: string
-  user_id: string
+  userId: string
   user?: {
     first_name: string
     last_name: string
     email: string
     role: string
   }
-  document_id: string
-  ip_address: string
+  documentId: string
+  ipAddress: string
   details: string
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export function useAuditLogs(params?: {
   search?: string
-  document_id?: string
-  user_id?: string
+  documentId?: string
+  userId?: string
   action?: string
-  start_date?: string
-  end_date?: string
+  startDate?: string
+  endDate?: string
   page?: number
-  page_size?: number
+  pageSize?: number
   enabled?: boolean
 }) {
   const { enabled = true, ...apiParams } = params || {}
