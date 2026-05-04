@@ -13,3 +13,8 @@ tmp/
 # IDE
 .vscode/
 .idea/
+
+#DB
+*.db
+*.db-wal
+*.db-shm

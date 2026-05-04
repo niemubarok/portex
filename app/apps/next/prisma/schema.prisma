@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String     @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String     @unique
+  password        String
+  role            String     @default("OFFICER")
+  avatar          String?
+  jobTitle        String?
+  bio             String?
+  active          Boolean    @default(true)
+  provider        String     @default("local")
+  googleId        String?
+  githubId        String?
+  emailVerifiedAt DateTime?
+  ipAddress       String?
+  macAddress      String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  documents       Document[] @relation("Uploader")
+  auditLogs       AuditLog[]
+  uploads         Upload[]
+}
+
+model Document {
+  id              String     @id @default(uuid())
+  title           String
+  status          String     @default("Draft")
+  poPath          String
+  invoicePath     String?
+  packingListPath String?
+  pebPath         String?
+  blPath          String?
+  otherPath       String?
+  retentionYears  Int        @default(10)
+  uploaderId      String
+  notes           String?
+  managerNotes    String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  uploader        User       @relation("Uploader", fields: [uploaderId], references: [id])
+  auditLogs       AuditLog[]
+}
+
+model AuditLog {
+  id              String     @id @default(uuid())
+  action          String
+  userId          String?
+  documentId      String?
+  ipAddress       String
+  details         String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  user            User?      @relation(fields: [userId], references: [id])
+  document        Document?  @relation(fields: [documentId], references: [id])
+}
+
+model Setting {
+  key             String     @id
+  value           String?
+  updatedAt       DateTime   @updatedAt
+}
+
+model Upload {
+  id              String     @id @default(uuid())
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int
+  path            String
+  url             String?
+  thumbnailUrl    String?
+  userId          String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  user            User       @relation(fields: [userId], references: [id])
+}
+
+model Blog {
+  id              String     @id @default(uuid())
+  title           String
+  slug            String     @unique
+  content         String?
+  published       Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model UIComponent {
+  id              String     @id @default(uuid())
+  name            String
+  category        String
+  config          String?    // JSON string
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
