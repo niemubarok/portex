@@ -186,8 +186,30 @@ export function setupApiMock(api: AxiosInstance) {
           const blob = await demoStorage.getFile(doc.poPath);
           if (blob) {
             const arrayBuffer = await blob.arrayBuffer();
-            const qrText = `PORTEX-DEMO-${doc.id}`;
-            const watermarkText = `LOCKED BY DEMO ADMIN - ${new Date().toLocaleDateString('id-ID')}`;
+            
+            // Create a verification URL for the QR code
+            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            const qrText = `${baseUrl}/documents/${doc.id}`;
+            
+            // Fetch watermark from demo settings
+            const settings = demoDB.get<any>('settings');
+            const watermarkSetting = settings.find((s: any) => s.key === 'watermark_text' || s.key === 'watermarkText');
+            let watermarkTemplate = watermarkSetting?.value || 'LOCKED BY {user} - {date}';
+            
+            // Simple user detection from localStorage if possible
+            let userName = 'DEMO ADMIN';
+            if (typeof window !== 'undefined') {
+              const userRaw = localStorage.getItem('portex_user');
+              if (userRaw) {
+                const user = JSON.parse(userRaw);
+                userName = `${user.firstName} ${user.lastName}`.toUpperCase();
+              }
+            }
+
+            const watermarkText = watermarkTemplate
+              .replace('{user}', userName)
+              .replace('{date}', new Date().toLocaleDateString('id-ID'))
+              .replace('{id}', (doc.id || '').substring(0, 8));
             
             const processedBytes = await addWatermarkAndQRBrowser(arrayBuffer, qrText, watermarkText);
             const processedBlob = new Blob([processedBytes], { type: 'application/pdf' });
@@ -264,20 +286,30 @@ export function setupApiMock(api: AxiosInstance) {
     else if (url.includes('/api/settings') && method === 'get') {
       const settings = demoDB.get<any>('settings');
       if (settings.length === 0) {
-        mockResponse = success([
+        const defaultSettings = [
           { key: 'retention_years', value: '10' },
-          { key: 'watermark_text', value: 'CONFIDENTIAL' }
-        ]);
+          { key: 'watermark_text', value: 'LOCKED BY {user} - {date}' }
+        ];
+        demoDB.set('settings', defaultSettings);
+        mockResponse = success(defaultSettings);
       } else {
         mockResponse = success(settings);
       }
     }
 
     else if (url.includes('/api/settings') && method === 'put') {
-      // Data is Record<string, string>
-      const newSettings = Object.entries(data).map(([key, value]) => ({ key, value: String(value) }));
-      demoDB.set('settings', newSettings);
-      mockResponse = success(newSettings);
+      const { key, value } = data;
+      const settings = demoDB.get<any>('settings');
+      const index = settings.findIndex((s: any) => s.key === key);
+      
+      if (index > -1) {
+        settings[index].value = value;
+      } else {
+        settings.push({ key, value });
+      }
+      
+      demoDB.set('settings', settings);
+      mockResponse = success(settings);
     }
 
     // --- OTHER DOCUMENT ACTIONS ---

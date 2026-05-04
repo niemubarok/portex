@@ -49,7 +49,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: { message: 'S3 storage not yet fully implemented in lock action' } }, { status: 501 })
     }
 
-    const qrText = `PORTEX-DOC-${document.id}`
+    const host = req.headers.get('host') || 'portex.app'
+    const protocol = req.headers.get('x-forwarded-proto') || 'http'
+    const qrText = `${protocol}://${host}/documents/${document.id}`
     
     // Fetch watermark setting
     const watermarkSetting = await prisma.setting.findUnique({ where: { key: 'watermark_text' } })
