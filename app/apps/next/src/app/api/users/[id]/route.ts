@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyToken } from '@/lib/jwt'
 import bcrypt from 'bcryptjs'
 
-async function getAuthUser(req: Request) {
+async function getAuthUser(req: Request | NextRequest) {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
   const token = authHeader.split(' ')[1]
   return verifyToken(token) as any
 }
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const adminUser = await getAuthUser(req)
     if (!adminUser || adminUser.role !== 'ADMIN') {
@@ -57,7 +57,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const adminUser = await getAuthUser(req)
     if (!adminUser || adminUser.role !== 'ADMIN') {
