@@ -118,8 +118,9 @@ export function setupApiMock(api: AxiosInstance) {
       demoDB.insert('audit_logs', {
         id: uuidv4(),
         action: 'UPLOAD_DOCUMENT',
-        details: `Uploaded document: ${newDoc.title}`,
+        details: `Dokumen dibuat dengan judul: ${newDoc.title}`,
         userId: 'demo-user',
+        documentId: newDoc.id,
         createdAt: new Date().toISOString()
       });
 
@@ -157,15 +158,16 @@ export function setupApiMock(api: AxiosInstance) {
     else if (url.includes('/approve') && method === 'post') {
       const parts = url.split('/');
       const id = parts[parts.indexOf('documents') + 1];
+      const notes = data instanceof FormData ? data.get('manager_notes') : data.manager_notes;
       const updated = demoDB.update<any>('documents', id, { 
         status: 'Approved',
-        managerNotes: data.notes 
+        managerNotes: notes 
       });
       
       demoDB.insert('audit_logs', {
         id: uuidv4(),
         action: 'APPROVE_LEVEL_1',
-        details: `Approved document (Level 1): ${updated?.title}`,
+        details: `Dokumen disetujui oleh MANAGER${notes ? ` | Catatan: ${notes}` : ''}`,
         userId: 'demo-user',
         documentId: id,
         createdAt: new Date().toISOString()
@@ -181,52 +183,16 @@ export function setupApiMock(api: AxiosInstance) {
       const docs = demoDB.get<any>('documents');
       const doc = docs.find((d: any) => d.id === id);
 
-      if (doc && doc.poPath) {
-        try {
-          const blob = await demoStorage.getFile(doc.poPath);
-          if (blob) {
-            const arrayBuffer = await blob.arrayBuffer();
-            
-            // Create a verification URL for the QR code
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-            const qrText = `${baseUrl}/documents/${doc.id}`;
-            
-            // Fetch watermark from demo settings
-            const settings = demoDB.get<any>('settings');
-            const watermarkSetting = settings.find((s: any) => s.key === 'watermark_text' || s.key === 'watermarkText');
-            let watermarkTemplate = watermarkSetting?.value || 'LOCKED BY {user} - {date}';
-            
-            // Simple user detection from localStorage if possible
-            let userName = 'DEMO ADMIN';
-            if (typeof window !== 'undefined') {
-              const userRaw = localStorage.getItem('portex_user');
-              if (userRaw) {
-                const user = JSON.parse(userRaw);
-                userName = `${user.firstName} ${user.lastName}`.toUpperCase();
-              }
-            }
-
-            const watermarkText = watermarkTemplate
-              .replace('{user}', userName)
-              .replace('{date}', new Date().toLocaleDateString('id-ID'))
-              .replace('{id}', (doc.id || '').substring(0, 8));
-            
-            const processedBytes = await addWatermarkAndQRBrowser(arrayBuffer, qrText, watermarkText);
-            const processedBlob = new Blob([processedBytes], { type: 'application/pdf' });
-            
-            await demoStorage.saveFile(doc.poPath, processedBlob);
-          }
-        } catch (err) {
-          console.error('Error processing PDF in demo mode:', err);
-        }
-      }
-
-      const updated = demoDB.update<any>('documents', id, { status: 'Locked' });
+      const notes = data instanceof FormData ? data.get('manager_notes') : data.manager_notes;
+      const updated = demoDB.update<any>('documents', id, { 
+        status: 'Locked',
+        managerNotes: notes || doc?.managerNotes
+      });
       
       demoDB.insert('audit_logs', {
         id: uuidv4(),
         action: 'APPROVE_FINAL',
-        details: `Locked and watermarked document (Demo): ${updated?.title}`,
+        details: `Dokumen dikunci oleh MANAGER${notes ? ` | Catatan: ${notes}` : ''}`,
         userId: 'demo-user',
         documentId: id,
         createdAt: new Date().toISOString()
@@ -238,8 +204,9 @@ export function setupApiMock(api: AxiosInstance) {
     // --- AUDIT LOGS ---
     else if ((url.includes('/api/audit_logs') || url.includes('/api/audit-logs')) && method === 'get') {
       const logs = demoDB.get<any>('audit_logs');
-      if (params?.documentId) {
-        mockResponse = success(logs.filter((l: any) => l.documentId === params.documentId));
+      const docId = params?.document_id || params?.documentId;
+      if (docId) {
+        mockResponse = success(logs.filter((l: any) => l.documentId === docId));
       } else {
         mockResponse = success(logs);
       }

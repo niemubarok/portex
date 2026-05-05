@@ -83,11 +83,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     await prisma.auditLog.create({
       data: {
-        action: 'LOCK_DOCUMENT',
+        action: 'APPROVE_FINAL',
         userId: user.id,
         documentId: id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Locked and watermarked document: ${document.title}`,
+        details: `Dokumen dikunci oleh ${user.role}`,
       },
     })
 

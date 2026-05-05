@@ -42,7 +42,7 @@ export async function PUT(req: Request) {
         action: 'UPDATE_SETTING',
         userId: user.id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Updated setting: ${key} to ${value}`,
+        details: `Memperbarui pengaturan: ${key}`,
       },
     })
 

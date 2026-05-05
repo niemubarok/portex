@@ -119,7 +119,7 @@ export async function POST(req: Request) {
         userId: user.id,
         documentId: document.id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Uploaded document: ${title}`,
+        details: `Dokumen dibuat dengan judul: ${title}`,
       },
     })
 

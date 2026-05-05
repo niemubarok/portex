@@ -333,6 +333,7 @@ func Setup(db *gorm.DB, cfg *config.Config, svc *Services) *gin.Engine {
 		protected.POST("/documents", documentHandler.Create)
 		protected.PUT("/documents/:id", documentHandler.Update)
 		protected.POST("/documents/:id/approve", documentHandler.Approve)
+		protected.POST("/documents/:id/lock", documentHandler.Approve)
 		protected.GET("/documents/:id/download", documentHandler.Download)
 
 		// Audit Logs (Restricted to Admin & Auditor)

@@ -247,7 +247,11 @@ func (h *DocumentHandler) Create(c *gin.Context) {
 
 	// Audit Log
 	log.Printf("[DocumentHandler] Calling AuditSvc.Log for document %s", item.ID)
-	err = h.AuditSvc.Log("UPLOAD_DOCUMENT", uploaderID, item.ID, c.ClientIP(), "Document created with title: "+item.Title)
+	details := "Dokumen dibuat dengan judul: " + item.Title
+	if item.Notes != "" {
+		details += " | Catatan: " + item.Notes
+	}
+	err = h.AuditSvc.Log("UPLOAD_DOCUMENT", uploaderID, item.ID, c.ClientIP(), details)
 	if err != nil {
 		log.Printf("[DocumentHandler] AuditSvc.Log failed: %v", err)
 	} else {
@@ -385,7 +389,11 @@ func (h *DocumentHandler) Update(c *gin.Context) {
 	}
 
 	// Audit Log
-	h.AuditSvc.Log("UPDATE_DOCUMENT", userID, item.ID, c.ClientIP(), "Document updated")
+	updateDetails := "Dokumen diperbarui"
+	if notes := c.PostForm("notes"); notes != "" {
+		updateDetails += " | Catatan: " + notes
+	}
+	h.AuditSvc.Log("UPDATE_DOCUMENT", userID, item.ID, c.ClientIP(), updateDetails)
 
 	h.DB.First(&item, "id = ?", item.ID)
 
@@ -493,11 +501,11 @@ func (h *DocumentHandler) Approve(c *gin.Context) {
 	if item.Status == models.StatusDraft {
 		newStatus = models.StatusApproved
 		action = "APPROVE_LEVEL_1"
-		details = "Document approved by " + userRole
+		details = "Dokumen disetujui oleh " + userRole
 	} else if item.Status == models.StatusApproved {
 		newStatus = models.StatusLocked
 		action = "APPROVE_FINAL"
-		details = "Document locked by " + userRole
+		details = "Dokumen dikunci oleh " + userRole
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{"code": "BAD_REQUEST", "message": "Document is already locked or in invalid status for approval"},
@@ -513,6 +521,12 @@ func (h *DocumentHandler) Approve(c *gin.Context) {
 	if err := h.DB.Model(&item).Updates(updates).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": "INTERNAL_ERROR", "message": "Failed to approve document"})
 		return
+	}
+
+	// Add notes to audit log details if present
+	managerNotes := c.PostForm("manager_notes")
+	if managerNotes != "" {
+		details += " | Catatan: " + managerNotes
 	}
 
 	// If status is Locked, process ALL PDF files
@@ -671,10 +685,10 @@ func (h *DocumentHandler) Download(c *gin.Context) {
 	// Log download activity
 	mode := c.Query("mode")
 	action := "DOWNLOAD_DOCUMENT"
-	details := "Downloaded " + fileType + " file"
+	details := "Mengunduh file " + fileType
 	if mode == "view" {
 		action = "VIEW_DOCUMENT"
-		details = "Viewed " + fileType + " file in browser"
+		details = "Melihat file " + fileType + " di browser"
 	}
 	h.AuditSvc.Log(action, userID, item.ID, c.ClientIP(), details)
 

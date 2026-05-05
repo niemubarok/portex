@@ -247,15 +247,25 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
                                  log.action === 'APPROVE_LEVEL_1' ? 'Persetujuan Level 1' :
                                  log.action === 'APPROVE_FINAL' ? 'Dokumen Terkunci' :
                                  log.action === 'UPDATE_DOCUMENT' ? 'Dokumen Diperbarui' :
+                                 log.action === 'VIEW_DOCUMENT' ? 'Melihat Dokumen' :
+                                 log.action === 'DOWNLOAD_DOCUMENT' ? 'Mengunduh Dokumen' :
                                  log.action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                               </p>
                               <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] whitespace-nowrap bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded border border-[var(--border)]">
                                 {format(new Date(log.createdAt), 'dd MMM, HH:mm', { locale: idLocale })}
                               </span>
                             </div>
-                            <p className="text-[10px] text-[var(--text-muted)] leading-relaxed mt-0.5 italic opacity-80 pl-0.5">
-                              {log.details || 'Tidak ada detail'}
-                            </p>
+                            <div className="text-[10px] text-[var(--text-muted)] leading-relaxed mt-1 italic opacity-80 pl-0.5">
+                              {log.details ? (
+                                log.details.split(' | ').map((part, i) => (
+                                  <div key={i} className={part.includes('Catatan:') || part.includes('Notes:') ? 'text-[var(--text-secondary)] font-medium not-italic mt-0.5 border-l-2 border-[var(--accent)]/30 pl-2 ml-0.5' : ''}>
+                                    {part}
+                                  </div>
+                                ))
+                              ) : (
+                                'Tidak ada detail'
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))

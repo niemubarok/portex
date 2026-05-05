@@ -57,7 +57,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         userId: user.id,
         documentId: id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Downloaded ${type} file of document: ${document.title}`,
+        details: `Mengunduh file ${type}`,
       },
     })
 

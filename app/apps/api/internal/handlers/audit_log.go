@@ -26,7 +26,13 @@ func (h *AuditLogHandler) List(c *gin.Context) {
 	
 	// New filters
 	docID := c.Query("document_id")
+	if docID == "" {
+		docID = c.Query("documentId")
+	}
 	userID := c.Query("user_id")
+	if userID == "" {
+		userID = c.Query("userId")
+	}
 	action := c.Query("action")
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
@@ -49,11 +55,11 @@ func (h *AuditLogHandler) List(c *gin.Context) {
 	query := h.DB.Model(&models.AuditLog{}).Preload("User")
 
 	if docID != "" {
-		query = query.Where("audit_logs.document_id = ?", docID)
+		query = query.Where("document_id = ?", docID)
 	}
 	
 	if userID != "" {
-		query = query.Where("audit_logs.user_id = ?", userID)
+		query = query.Where("user_id = ?", userID)
 	}
 	
 	if action != "" {

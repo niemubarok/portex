@@ -164,7 +164,7 @@ export function useDocumentAuditLogs(documentId?: string, enabled = true) {
     queryKey: ['audit_logs', documentId],
     queryFn: async () => {
       const res = await api.get('/api/audit_logs', {
-        params: { documentId, sort_by: 'createdAt', sort_order: 'asc' }
+        params: { document_id: documentId, sort_by: 'created_at', sort_order: 'asc' }
       })
       return res.data.data as AuditLog[]
     },

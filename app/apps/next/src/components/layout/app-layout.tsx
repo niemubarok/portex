@@ -577,7 +577,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                                       notif.action.includes('LOCK') ? 'text-warning border-warning/20 bg-warning/5' :
                                       'text-muted-foreground border-border bg-muted'
                                     }`}>
-                                      {notif.action}
+                                      {notif.action === 'UPLOAD_DOCUMENT' ? 'Upload Dokumen' :
+                                       notif.action === 'APPROVE_LEVEL_1' ? 'Persetujuan Lvl 1' :
+                                       notif.action === 'APPROVE_FINAL' ? 'Dokumen Terkunci' :
+                                       notif.action === 'UPDATE_DOCUMENT' ? 'Perbarui Dokumen' :
+                                       notif.action === 'VIEW_DOCUMENT' ? 'Lihat Dokumen' :
+                                       notif.action === 'DOWNLOAD_DOCUMENT' ? 'Unduh Dokumen' :
+                                       notif.action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                                     </span>
                                     <span className="text-[9px] text-muted-foreground font-bold uppercase">
                                       {new Date(notif.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}

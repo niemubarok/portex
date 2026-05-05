@@ -196,7 +196,13 @@ function AuditLogsContent() {
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${getActionColor(log.action)}`}>
                         <Terminal size={10} />
-                        {log.action}
+                        {log.action === 'UPLOAD_DOCUMENT' ? 'Upload Dokumen' :
+                         log.action === 'APPROVE_LEVEL_1' ? 'Persetujuan Level 1' :
+                         log.action === 'APPROVE_FINAL' ? 'Dokumen Terkunci' :
+                         log.action === 'UPDATE_DOCUMENT' ? 'Perbarui Dokumen' :
+                         log.action === 'VIEW_DOCUMENT' ? 'Lihat Dokumen' :
+                         log.action === 'DOWNLOAD_DOCUMENT' ? 'Unduh Dokumen' :
+                         log.action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                       </span>
                     </td>
                     <td className="px-6 py-4">

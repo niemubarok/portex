@@ -102,7 +102,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         userId: user.id,
         documentId: id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Updated document: ${updatedDocument.title}`,
+        details: `Dokumen diperbarui`,
       },
     })
 
@@ -145,7 +145,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
         userId: user.id,
         documentId: id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Deleted document: ${document.title}`,
+        details: `Dokumen dihapus`,
       },
     })
 

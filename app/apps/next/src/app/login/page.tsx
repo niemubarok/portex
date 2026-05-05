@@ -51,31 +51,31 @@ export default function LoginPage() {
           className="object-cover opacity-60 mix-blend-overlay scale-105"
           priority
         />
-        
+
         {/* Abstract Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-accent/40 via-transparent to-black/60" />
-        
+
         {/* Content Overlay */}
         <div className="relative z-10 flex flex-col justify-between p-16 w-full">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
               <ShieldCheck className="text-white w-7 h-7" />
             </div>
-            <span className="text-white text-xl font-bold tracking-tight">PortEx Portal</span>
+            <span className="text-white text-xl font-bold tracking-tight">PortEx</span>
           </div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="max-w-lg"
           >
             <h2 className="text-5xl font-extrabold text-white leading-tight mb-6">
-              Sistem Manajemen <br />
-              <span className="text-accent italic">E-Document</span> Ekspor
+              Portal <br />
+              <span className="text-accent italic">E-Document Export Sales</span>
             </h2>
             <p className="text-lg text-white/70 leading-relaxed">
-              Platform terintegrasi untuk pengelolaan dokumen ekspor PT Semen Tonasa. 
+              Platform terintegrasi untuk pengelolaan dokumen ekspor PT Semen Tonasa.
               Keamanan data, efisiensi alur kerja, dan transparansi dalam setiap transaksi.
             </p>
           </motion.div>
@@ -111,8 +111,8 @@ export default function LoginPage() {
               {isLogin ? 'Selamat Datang' : 'Buat Akun Baru'}
             </h2>
             <p className="text-muted-foreground">
-              {isLogin 
-                ? 'Silakan masuk untuk mengakses portal dokumen ekspor.' 
+              {isLogin
+                ? 'Silakan masuk untuk mengakses portal dokumen ekspor.'
                 : 'Lengkapi data diri Anda untuk mendaftar ke sistem.'}
             </p>
           </div>
@@ -121,7 +121,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <AnimatePresence mode="wait">
               {error && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -135,7 +135,7 @@ export default function LoginPage() {
 
             <AnimatePresence mode="wait">
               {!isLogin && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -243,7 +243,7 @@ export default function LoginPage() {
 
           {/* Demo Credentials Section */}
           {isLogin && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-8 p-5 rounded-2xl bg-muted/30 border border-border/50"

@@ -50,11 +50,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     await prisma.auditLog.create({
       data: {
-        action: 'APPROVE_DOCUMENT',
+        action: 'APPROVE_LEVEL_1',
         userId: user.id,
         documentId: id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Approved document: ${document.title}. Notes: ${notes}`,
+        details: `Dokumen disetujui oleh ${user.role}${notes ? ` | Catatan: ${notes}` : ''}`,
       },
     })
 
