@@ -583,7 +583,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                                        notif.action === 'UPDATE_DOCUMENT' ? 'Perbarui Dokumen' :
                                        notif.action === 'VIEW_DOCUMENT' ? 'Lihat Dokumen' :
                                        notif.action === 'DOWNLOAD_DOCUMENT' ? 'Unduh Dokumen' :
-                                       notif.action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                                       notif.action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
                                     </span>
                                     <span className="text-[9px] text-muted-foreground font-bold uppercase">
                                       {new Date(notif.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
