@@ -19,10 +19,14 @@ import {
   Sun,
   Moon,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Activity
 } from 'lucide-react'
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { auth } from '@/lib/auth'
+import { useAuditLogs } from '@/hooks/use-audit-logs'
+
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -37,19 +41,34 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [statusFilterOpen, setStatusFilterOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
+
 
   const user = auth.getUser()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [lastReadNotifications, setLastReadNotifications] = useState<string | null>(null)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+
   const [hoverPos, setHoverPos] = useState(0)
+
+  const { data: notifications = [], isLoading: loadingNotifications } = useAuditLogs({ 
+    pageSize: 5,
+    enabled: isLoggedIn 
+  })
+
 
   useEffect(() => {
     setIsLoggedIn(auth.isAuthenticated())
     if (!auth.isAuthenticated() && !['/', '/login'].includes(pathname)) {
       router.push('/login')
     }
+    
+    if (typeof window !== 'undefined') {
+      setLastReadNotifications(localStorage.getItem('portex_last_read_notifications'))
+    }
   }, [pathname, router])
+
 
   // Handle window width for sidebar
   useEffect(() => {
@@ -110,12 +129,24 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   // Close status filter dropdown when clicking outside
   useEffect(() => {
-    const handleClick = () => setStatusFilterOpen(false)
-    if (statusFilterOpen) {
+    const handleClick = () => {
+      setStatusFilterOpen(false)
+      setNotificationsOpen(false)
+    }
+    if (statusFilterOpen || notificationsOpen) {
       window.addEventListener('click', handleClick)
     }
+    
+    if (notificationsOpen) {
+      const now = new Date().toISOString()
+      setLastReadNotifications(now)
+      localStorage.setItem('portex_last_read_notifications', now)
+    }
+
     return () => window.removeEventListener('click', handleClick)
-  }, [statusFilterOpen])
+  }, [statusFilterOpen, notificationsOpen])
+
+
 
 
 
@@ -490,10 +521,99 @@ export function AppLayout({ children }: AppLayoutProps) {
                   {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
 
-                <button className="hidden sm:flex p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all relative">
-                  <Bell size={20} />
-                  <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
-                </button>
+                <div className="relative">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setNotificationsOpen(!notificationsOpen) }}
+                    className={`hidden sm:flex p-2.5 rounded-xl transition-all relative ${notificationsOpen ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                  >
+                    <Bell size={20} />
+                    {notifications.length > 0 && (!lastReadNotifications || new Date(notifications[0].createdAt) > new Date(lastReadNotifications)) && (
+                      <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive border-2 border-background animate-pulse" />
+                    )}
+                  </button>
+
+
+                  <AnimatePresence>
+                    {notificationsOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-80 sm:w-96 bg-background border border-border rounded-2xl shadow-2xl z-[100] overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Activity size={16} className="text-accent" />
+                            <h3 className="font-bold text-sm uppercase tracking-widest">Notifikasi</h3>
+                          </div>
+                          <span className="text-[10px] font-bold bg-accent/10 text-accent px-2 py-0.5 rounded-full uppercase">Terbaru</span>
+                        </div>
+                        
+                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                          {loadingNotifications ? (
+                            <div className="p-10 flex flex-col items-center justify-center gap-3">
+                              <div className="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Memuat...</span>
+                            </div>
+                          ) : notifications.length === 0 ? (
+                            <div className="p-10 flex flex-col items-center justify-center gap-3 text-center">
+                              <Bell size={32} className="text-muted-foreground/20" />
+                              <p className="text-xs text-muted-foreground font-medium">Belum ada notifikasi baru untuk Anda.</p>
+                            </div>
+                          ) : (
+                            <div className="divide-y divide-border/50">
+                              {notifications.map((notif: any) => (
+                                <Link 
+                                  key={notif.id}
+                                  href={notif.documentId ? `/dashboard?docId=${notif.documentId}` : '/admin/logs'}
+                                  onClick={() => setNotificationsOpen(false)}
+                                  className="flex flex-col gap-1 px-5 py-4 hover:bg-muted/50 transition-colors"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                                      notif.action.includes('CREATE') || notif.action.includes('UPLOAD') ? 'text-success border-success/20 bg-success/5' :
+                                      notif.action.includes('APPROVE') ? 'text-info border-info/20 bg-info/5' :
+                                      notif.action.includes('LOCK') ? 'text-warning border-warning/20 bg-warning/5' :
+                                      'text-muted-foreground border-border bg-muted'
+                                    }`}>
+                                      {notif.action}
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground font-bold uppercase">
+                                      {new Date(notif.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs font-medium text-foreground/80 leading-relaxed">
+                                    {notif.details}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div className="h-4 w-4 rounded-full bg-accent/10 flex items-center justify-center text-[8px] font-bold text-accent">
+                                      {notif.user?.firstName?.[0] || 'S'}
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground font-semibold">
+                                      {notif.user ? `${notif.user.firstName} ${notif.user.lastName}` : 'System'}
+                                    </span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {(user?.role === 'ADMIN' || user?.role === 'AUDITOR') && (
+                          <Link 
+                            href="/admin/logs"
+                            onClick={() => setNotificationsOpen(false)}
+                            className="block w-full py-3 text-center text-[10px] font-bold text-accent bg-muted/20 hover:bg-muted/40 transition-colors uppercase tracking-[0.2em] border-t border-border"
+                          >
+                            Lihat Semua Log Audit
+                          </Link>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
               </>
             )}
             
