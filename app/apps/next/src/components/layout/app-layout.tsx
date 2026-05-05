@@ -20,7 +20,8 @@ import {
   Moon,
   Filter,
   ChevronDown,
-  Activity
+  Activity,
+  FolderOpen
 } from 'lucide-react'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -100,6 +101,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     if (pathname.includes('/admin/logs')) return 'Cari aktivitas log...'
     if (pathname.includes('/admin/users')) return 'Cari pengguna...'
     if (pathname.includes('/documents')) return 'Cari dokumen...'
+    if (pathname.includes('/files')) return 'Cari berkas...'
     return 'Cari di sistem...'
   }
 
@@ -166,6 +168,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       href: '/documents', 
       icon: FileText 
     },
+    { name: 'Berkas', href: '/files', icon: FolderOpen },
     { type: 'divider', roles: ['ADMIN', 'AUDITOR'] },
     { name: 'Audit Logs', href: '/admin/logs', icon: Shield, roles: ['ADMIN', 'AUDITOR'] },
     { type: 'divider', roles: ['ADMIN'] },
