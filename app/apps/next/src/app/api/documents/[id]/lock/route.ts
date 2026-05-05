@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyToken } from '@/lib/jwt'
 import { addWatermarkAndQR } from '@/lib/pdf-next'
-import fs from 'fs'
-import path from 'path'
+import { getSupabaseServer } from '@/lib/supabase'
+
+const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'documents'
 
 async function getAuthUser(req: Request) {
   const authHeader = req.headers.get('Authorization')
@@ -33,21 +34,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     // Process PO File (Watermark and QR)
-    // For this migration, I'll assume local storage first to keep it simple
-    // If it's S3, I would need to download and re-upload
-    const isLocal = process.env.STORAGE_TYPE === 'local'
-    let poBuffer: Buffer
+    // Download from Supabase
+    const supabase = getSupabaseServer()
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .download(document.poPath)
 
-    if (isLocal) {
-      const fullPath = path.join(process.cwd(), 'public', document.poPath)
-      if (!fs.existsSync(fullPath)) {
-        return NextResponse.json({ error: { message: 'PO file not found in storage' } }, { status: 404 })
-      }
-      poBuffer = fs.readFileSync(fullPath)
-    } else {
-      // S3 Logic here... (Skipping for now to prioritize local deployment)
-      return NextResponse.json({ error: { message: 'S3 storage not yet fully implemented in lock action' } }, { status: 501 })
+    if (downloadError || !fileData) {
+      return NextResponse.json({ error: { message: 'PO file not found in storage' } }, { status: 404 })
     }
+
+    const arrayBuffer = await fileData.arrayBuffer()
+    const poBuffer = Buffer.from(arrayBuffer)
 
     const host = req.headers.get('host') || 'portex.app'
     const protocol = req.headers.get('x-forwarded-proto') || 'http'
@@ -64,9 +62,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     
     const processedBuffer = await addWatermarkAndQR(poBuffer, qrText, watermarkText)
 
-    if (isLocal) {
-      const fullPath = path.join(process.cwd(), 'public', document.poPath)
-      fs.writeFileSync(fullPath, processedBuffer)
+    // Re-upload to Supabase (overwrite)
+    const { error: uploadError } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .upload(document.poPath, processedBuffer, {
+        contentType: 'application/pdf',
+        upsert: true
+      })
+
+    if (uploadError) {
+      throw new Error(`Supabase re-upload error: ${uploadError.message}`)
     }
 
     const updatedDocument = await prisma.document.update({

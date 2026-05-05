@@ -6,94 +6,104 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
   id              String     @id @default(uuid())
-  firstName       String
-  lastName        String
+  firstName       String     @map("first_name")
+  lastName        String     @map("last_name")
   email           String     @unique
   password        String
   role            String     @default("OFFICER")
   avatar          String?
-  jobTitle        String?
+  jobTitle        String?    @map("job_title")
   bio             String?
   active          Boolean    @default(true)
   provider        String     @default("local")
-  googleId        String?
-  githubId        String?
-  emailVerifiedAt DateTime?
-  ipAddress       String?
-  macAddress      String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  googleId        String?    @map("google_id")
+  githubId        String?    @map("github_id")
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  ipAddress       String?    @map("ip_address")
+  macAddress      String?    @map("mac_address")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
 
   documents       Document[] @relation("Uploader")
   auditLogs       AuditLog[]
   uploads         Upload[]
+
+  @@map("users")
 }
 
 model Document {
   id              String     @id @default(uuid())
   title           String
   status          String     @default("Draft")
-  poPath          String
-  invoicePath     String?
-  packingListPath String?
-  pebPath         String?
-  blPath          String?
-  otherPath       String?
-  retentionYears  Int        @default(10)
-  uploaderId      String
+  poPath          String     @map("po_path")
+  invoicePath     String?    @map("invoice_path")
+  packingListPath String?    @map("packing_list_path")
+  pebPath         String?    @map("peb_path")
+  blPath          String?    @map("bl_path")
+  otherPath       String?    @map("other_path")
+  retentionYears  Int        @default(10) @map("retention_years")
+  uploaderId      String     @map("uploader_id")
   notes           String?
-  managerNotes    String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  managerNotes    String?    @map("manager_notes")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
 
   uploader        User       @relation("Uploader", fields: [uploaderId], references: [id])
   auditLogs       AuditLog[]
+
+  @@map("documents")
 }
 
 model AuditLog {
   id              String     @id @default(uuid())
   action          String
-  userId          String?
-  documentId      String?
-  ipAddress       String
+  userId          String?    @map("user_id")
+  documentId      String?    @map("document_id")
+  ipAddress       String     @map("ip_address")
   details         String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
 
   user            User?      @relation(fields: [userId], references: [id])
   document        Document?  @relation(fields: [documentId], references: [id])
+
+  @@map("audit_logs")
 }
 
 model Setting {
   key             String     @id
   value           String?
-  updatedAt       DateTime   @updatedAt
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@map("settings")
 }
 
 model Upload {
   id              String     @id @default(uuid())
   filename        String
-  originalName    String
-  mimeType        String
+  originalName    String     @map("original_name")
+  mimeType        String     @map("mime_type")
   size            Int
   path            String
   url             String?
-  thumbnailUrl    String?
-  userId          String
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  thumbnailUrl    String?    @map("thumbnail_url")
+  userId          String     @map("user_id")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
 
   user            User       @relation(fields: [userId], references: [id])
+
+  @@map("uploads")
 }
 
 model Blog {
@@ -102,8 +112,10 @@ model Blog {
   slug            String     @unique
   content         String?
   published       Boolean    @default(false)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@map("blogs")
 }
 
 model UIComponent {
@@ -111,6 +123,8 @@ model UIComponent {
   name            String
   category        String
   config          String?    // JSON string
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@map("ui_components")
 }

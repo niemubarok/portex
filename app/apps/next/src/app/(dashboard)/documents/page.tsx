@@ -63,7 +63,7 @@ function DocumentsContent() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="max-w-full mx-auto px-0 py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div>
@@ -98,34 +98,34 @@ function DocumentsContent() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                  <th className="px-5 py-3.5 font-medium">Judul Dokumen</th>
-                  <th className="px-5 py-3.5 font-medium">PO</th>
-                  <th className="px-5 py-3.5 font-medium">Status</th>
-                  <th className="px-5 py-3.5 font-medium">Tanggal Upload</th>
-                  <th className="px-5 py-3.5 font-medium text-right">Aksi</th>
+                  <th className="px-5 py-2 font-medium">Judul Dokumen</th>
+                  <th className="px-5 py-2 font-medium">PO</th>
+                  <th className="px-5 py-2 font-medium">Status</th>
+                  <th className="px-5 py-2 font-medium">Tanggal Upload</th>
+                  <th className="px-5 py-2 font-medium text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {documents.map((doc) => (
                   <tr key={doc.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-2.5">
                       <p className="font-medium text-foreground">{doc.title}</p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-2.5">
                       {doc.poPath ? (
                         <span className="text-success text-xs font-medium">✓ Ada</span>
                       ) : (
                         <span className="text-destructive text-xs font-medium">✗ Belum</span>
                       )}
                     </td>
-                    <td className="px-5 py-4"><StatusBadge status={doc.status} /></td>
-                    <td className="px-5 py-4 text-muted-foreground">
+                    <td className="px-5 py-2.5"><StatusBadge status={doc.status} /></td>
+                    <td className="px-5 py-2.5 text-muted-foreground">
                       <div className="flex flex-col">
                         <span>{new Date(doc.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                         <span className="text-[10px] opacity-60">{new Date(doc.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-right flex justify-end gap-2">
+                    <td className="px-5 py-2.5 text-right flex justify-end gap-2">
                         <button
                           onClick={() => { setSelectedDoc(doc) }}
                           className="text-muted-foreground hover:text-accent transition-colors p-2 rounded-lg hover:bg-accent/10"

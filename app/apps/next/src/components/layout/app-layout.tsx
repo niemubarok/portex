@@ -12,17 +12,16 @@ import {
   Menu, 
   X,
   LogOut, 
-  ChevronRight,
   Bell,
   Search,
   User,
   Home,
-  ChevronDown,
-  History,
   Sun,
   Moon,
-  Filter
+  Filter,
+  ChevronDown
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { auth } from '@/lib/auth'
 
 interface AppLayoutProps {
@@ -36,11 +35,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
 
   const user = auth.getUser()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const [hoverPos, setHoverPos] = useState(0)
 
   useEffect(() => {
     setIsLoggedIn(auth.isAuthenticated())
@@ -106,14 +108,16 @@ export function AppLayout({ children }: AppLayoutProps) {
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  // Close dropdown when clicking outside
+  // Close status filter dropdown when clicking outside
   useEffect(() => {
-    const handleClick = () => setProfileDropdownOpen(false)
-    if (profileDropdownOpen) {
+    const handleClick = () => setStatusFilterOpen(false)
+    if (statusFilterOpen) {
       window.addEventListener('click', handleClick)
     }
     return () => window.removeEventListener('click', handleClick)
-  }, [profileDropdownOpen])
+  }, [statusFilterOpen])
+
+
 
   if (!isLoggedIn && !['/', '/login'].includes(pathname)) {
     return null
@@ -161,8 +165,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         className={`
           fixed inset-y-0 left-0 z-[50] lg:relative 
           ${sidebarOpen ? 'w-72' : 'w-24'} 
-          ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-          flex flex-col border-r border-border bg-muted/30 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none
+          ${mobileSidebarOpen ? 'translate-x-0 !w-72' : '-translate-x-full lg:translate-x-0'} 
+          flex flex-col border-r border-border bg-background/95 backdrop-blur-xl lg:bg-muted/30 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none
         `}
       >
         {/* Branding Area */}
@@ -185,26 +189,49 @@ export function AppLayout({ children }: AppLayoutProps) {
             <X size={20} />
           </button>
         </div>
-
-        {/* Demo Mode Indicator */}
-        {typeof window !== 'undefined' && localStorage.getItem('portex_demo_mode') === 'true' && (
-          <div className="mx-4 mt-4 p-3 rounded-xl bg-accent/10 border border-accent/20 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Mode Demo Aktif</span>
-            </div>
-            <p className="text-[9px] text-muted-foreground leading-tight">Data disimpan di browser Anda (LocalStorage & IndexedDB).</p>
-            <button 
-              onClick={() => {
-                localStorage.removeItem('portex_demo_mode');
-                window.location.href = '/login';
+        {/* User Profile Section */}
+        <div className="px-6 py-8 border-b border-border/30 bg-muted/10 shrink-0 overflow-hidden">
+          <div className={`flex flex-col ${(sidebarOpen || mobileSidebarOpen) ? 'items-start' : 'items-center'} gap-4`}>
+            <div 
+              className="relative group"
+              onMouseEnter={(e) => {
+                if (!sidebarOpen && !mobileSidebarOpen) {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  setHoverPos(rect.top + rect.height / 2)
+                  setHoveredItem(`${user?.firstName} ${user?.lastName}`)
+                }
               }}
-              className="text-[9px] font-bold text-accent hover:underline text-left mt-1"
+              onMouseLeave={() => setHoveredItem(null)}
             >
-              Keluar dari Mode Demo →
-            </button>
+              <div className="h-16 w-16 shrink-0 rounded-2xl bg-gradient-to-tr from-accent to-accent-hover border-2 border-background flex items-center justify-center text-white text-2xl font-bold shadow-2xl shadow-accent/20 transition-transform group-hover:scale-105 duration-300 cursor-pointer">
+                {user?.firstName?.[0] || '?'}
+              </div>
+              <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-success border-2 border-background shadow-sm" />
+            </div>
+            
+            {(sidebarOpen || mobileSidebarOpen) && (
+              <div className="flex flex-col min-w-0 animate-in fade-in slide-in-from-top-2 duration-500">
+                <span className="font-bold text-lg leading-tight truncate text-foreground/90">{user?.firstName} {user?.lastName}</span>
+                <span className="text-[10px] text-accent font-black uppercase tracking-[0.3em] mt-2">{user?.role}</span>
+                
+                <div className="flex items-center gap-4 mt-5">
+                  <Link href="/profile" className="group/link flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/60 hover:text-accent transition-all">
+                    <User size={14} className="text-foreground/40 group-hover/link:text-accent transition-colors" />
+                    Profil
+                  </Link>
+                  <div className="h-3 w-[1px] bg-border" />
+                  <button 
+                    onClick={() => { auth.logout(); router.push('/login') }}
+                    className="group/link flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/60 hover:text-destructive transition-all"
+                  >
+                    <LogOut size={14} className="text-foreground/40 group-hover/link:text-destructive transition-colors" />
+                    Keluar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Navigation Area */}
         <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar space-y-1">
@@ -215,15 +242,23 @@ export function AppLayout({ children }: AppLayoutProps) {
             const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href as string))
             return (
               <Link
-                key={item.name}
+                key={typeof item.name === 'string' ? item.name : 'nav-item'}
                 href={item.href as string}
-                className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                onMouseEnter={(e) => {
+                  if (!sidebarOpen && !mobileSidebarOpen) {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    setHoverPos(rect.top + rect.height / 2)
+                    setHoveredItem(typeof item.name === 'string' ? item.name : '')
+                  }
+                }}
+                onMouseLeave={() => setHoveredItem(null)}
+                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-accent text-white shadow-lg shadow-accent/10'
-                    : 'text-secondary-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-accent text-white shadow-lg shadow-accent/20'
+                    : 'text-foreground/70 hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <div className={`shrink-0 ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-foreground transition-colors'}`}>
+                <div className={`shrink-0 ${isActive ? 'text-white' : 'text-foreground/40 group-hover:text-foreground transition-colors'}`}>
                   {item.icon && <item.icon size={20} />}
                 </div>
                 {(sidebarOpen || mobileSidebarOpen) && (
@@ -239,171 +274,236 @@ export function AppLayout({ children }: AppLayoutProps) {
           })}
         </nav>
 
-        {/* Profile Area */}
-        <div className="p-4 border-t border-border/50 bg-muted/5 shrink-0 overflow-hidden">
-          <div className={`flex items-center ${(sidebarOpen || mobileSidebarOpen) ? 'gap-3' : 'justify-center'}`}>
-            <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-tr from-card to-muted border border-border flex items-center justify-center text-accent font-bold shadow-inner">
-              {user?.firstName?.[0] || '?'}
-            </div>
-            {(sidebarOpen || mobileSidebarOpen) && (
-              <div className="flex-1 min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
-                <p className="text-sm font-bold truncate leading-tight">{user?.firstName} {user?.lastName}</p>
-                <p className="text-[10px] text-accent font-bold uppercase tracking-wider truncate">{user?.role}</p>
-              </div>
-            )}
-          </div>
-        </div>
+
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Topbar */}
-        <header className="h-20 border-b border-border bg-muted/30 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 z-20 shrink-0">
+        <header className={`${mobileSearchOpen ? 'py-4 h-auto min-h-[80px]' : 'h-20'} border-b border-border bg-muted/30 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 z-20 shrink-0 transition-all duration-300`}>
           <div className="flex items-center gap-3 lg:gap-6 flex-1 min-w-0">
-            <button 
-              onClick={() => {
-                if (window.innerWidth < 1024) {
-                  setMobileSidebarOpen(true)
-                } else {
-                  setSidebarOpen(!sidebarOpen)
-                }
-              }}
-              className="p-2.5 rounded-xl bg-muted/50 text-muted-foreground hover:text-foreground border border-border transition-all shrink-0"
-            >
-              <Menu size={20} className={sidebarOpen && window.innerWidth >= 1024 ? 'rotate-90 transition-transform' : ''} />
-            </button>
+            {!mobileSearchOpen && (
+              <button 
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    setMobileSidebarOpen(true)
+                  } else {
+                    setSidebarOpen(!sidebarOpen)
+                  }
+                }}
+                className="p-2.5 rounded-xl bg-muted/50 text-muted-foreground hover:text-foreground border border-border transition-all shrink-0"
+              >
+                <Menu size={20} className={sidebarOpen && window.innerWidth >= 1024 ? 'rotate-90 transition-transform' : ''} />
+              </button>
+            )}
 
-            {/* Universal Search Bar - Enlarged */}
-            <div className="flex items-center gap-3 flex-1 max-w-4xl group hidden md:flex">
-              <div className="relative flex-1 max-w-2xl">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={20} />
-                <input 
-                  type="text" 
-                  placeholder={getSearchPlaceholder()}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-background border border-border rounded-2xl pl-14 pr-12 py-3 text-base outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 transition-all shadow-sm group-hover:border-muted-foreground/30"
-                />
-                {searchTerm && (
-                  <button 
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
+            {/* Mobile Search View */}
+            {mobileSearchOpen ? (
+              <div className="flex items-center gap-3 w-full animate-in slide-in-from-top-2 duration-300">
+                <div className="relative flex-1 flex items-center bg-background border border-accent rounded-xl focus-within:ring-4 focus-within:ring-accent/5 shadow-lg shadow-accent/5 transition-all">
+                  <Search className="ml-4 text-accent shrink-0" size={18} />
+                  <input 
+                    autoFocus
+                    type="text" 
+                    placeholder={getSearchPlaceholder()}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-transparent border-none py-2.5 pl-3 pr-2 text-sm outline-none placeholder:text-muted-foreground/60"
+                  />
+                  
+                  {/* Mobile Filters Integrated */}
+                  {(pathname.includes('/documents') || pathname.includes('/admin/logs')) && (
+                    <div className="flex items-center pr-2 border-l border-border/50 shrink-0 h-6 my-2 relative">
+                      {pathname.includes('/documents') && !pathname.includes('/new') && !pathname.includes('/edit') && (
+                        <div className="relative ml-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setStatusFilterOpen(!statusFilterOpen) }}
+                            className={`flex items-center gap-1.5 p-1.5 rounded-lg transition-all ${searchParams.get('status') ? 'bg-accent text-white' : 'text-accent hover:bg-accent/10'}`}
+                          >
+                            <Filter size={14} />
+                            {searchParams.get('status') && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider">{searchParams.get('status')}</span>
+                            )}
+                          </button>
+                          
+                          {statusFilterOpen && (
+                            <div className="absolute top-full right-0 mt-3 w-32 bg-background border border-border rounded-xl shadow-2xl z-50 py-1.5 animate-in slide-in-from-top-2 duration-200">
+                              {['', 'Draft', 'Approved', 'Locked', 'Rejected'].map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={() => {
+                                    const params = new URLSearchParams(searchParams.toString())
+                                    if (status) params.set('status', status)
+                                    else params.delete('status')
+                                    router.push(`${pathname}?${params.toString()}`)
+                                    setStatusFilterOpen(false)
+                                  }}
+                                  className={`w-full text-left px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest hover:bg-muted transition-colors ${searchParams.get('status') === status || (!status && !searchParams.get('status')) ? 'text-accent bg-accent/5' : 'text-foreground/70'}`}
+                                >
+                                  {status || 'Semua'}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {pathname.includes('/admin/logs') && (
+                        <button 
+                          onClick={() => {
+                            const params = new URLSearchParams(searchParams.toString())
+                            const show = params.get('showFilters') === 'true'
+                            if (!show) params.set('showFilters', 'true')
+                            else params.delete('showFilters')
+                            router.push(`${pathname}?${params.toString()}`)
+                          }}
+                          className={`flex items-center gap-1.5 ml-2 px-2.5 py-1.5 rounded-lg transition-all text-[10px] font-bold uppercase tracking-wider ${searchParams.get('showFilters') === 'true' ? 'bg-accent text-white' : 'bg-accent/5 text-accent hover:bg-accent/10'}`}
+                        >
+                          <Filter size={12} />
+                          Filter
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {searchTerm && !pathname.includes('/documents') && !pathname.includes('/admin/logs') && (
+                    <button 
+                      onClick={() => setSearchTerm('')}
+                      className="pr-3 text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <button 
+                  onClick={() => setMobileSearchOpen(false)}
+                  className="p-2.5 rounded-xl bg-accent/5 text-accent hover:bg-accent/10 transition-colors shrink-0"
+                  title="Tutup Pencarian"
+                >
+                  <X size={20} />
+                </button>
               </div>
+            ) : (
+              <>
+                {/* Universal Search Bar - Desktop */}
+                <div className="flex items-center flex-1 max-w-4xl group hidden md:flex">
+                  <div className="relative flex-1 max-w-2xl flex items-center bg-background border border-border rounded-2xl focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/5 transition-all shadow-sm hover:border-muted-foreground/30">
+                    <Search className="ml-5 text-muted-foreground group-focus-within:text-accent transition-colors shrink-0" size={20} />
+                    <input 
+                      type="text" 
+                      placeholder={getSearchPlaceholder()}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-transparent border-none py-3 pl-4 pr-4 text-base outline-none placeholder:text-muted-foreground/50"
+                    />
+                    
+                    {/* Desktop Filters Integrated */}
+                    {(pathname.includes('/documents') || pathname.includes('/admin/logs')) && (
+                      <div className="flex items-center pr-3 border-l border-border/50 ml-2 h-8 my-2 relative">
+                        {pathname.includes('/documents') && !pathname.includes('/new') && !pathname.includes('/edit') && (
+                          <div className="relative ml-4">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setStatusFilterOpen(!statusFilterOpen) }}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all font-bold text-xs uppercase tracking-widest ${searchParams.get('status') ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-muted-foreground hover:text-accent hover:bg-accent/5'}`}
+                            >
+                              <Filter size={16} />
+                              {searchParams.get('status') || 'Filter Status'}
+                              <ChevronDown size={14} className={`transition-transform ${statusFilterOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            
+                            {statusFilterOpen && (
+                              <div className="absolute top-full right-0 mt-3 w-44 bg-background border border-border rounded-2xl shadow-2xl z-50 py-2 animate-in slide-in-from-top-2 duration-200">
+                                {['', 'Draft', 'Approved', 'Locked', 'Rejected'].map((status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => {
+                                      const params = new URLSearchParams(searchParams.toString())
+                                      if (status) params.set('status', status)
+                                      else params.delete('status')
+                                      router.push(`${pathname}?${params.toString()}`)
+                                      setStatusFilterOpen(false)
+                                    }}
+                                    className={`w-full text-left px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-muted transition-colors ${searchParams.get('status') === status || (!status && !searchParams.get('status')) ? 'text-accent bg-accent/5' : 'text-foreground/70'}`}
+                                  >
+                                    {status || 'Semua Status'}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-              {/* Page Specific Filters in Topbar */}
-              {pathname.includes('/documents') && !pathname.includes('/new') && !pathname.includes('/edit') && (
-                <div className="relative shrink-0">
-                  <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <select 
-                    value={searchParams.get('status') || ''}
-                    onChange={(e) => {
-                      const params = new URLSearchParams(searchParams.toString())
-                      if (e.target.value) params.set('status', e.target.value)
-                      else params.delete('status')
-                      router.push(`${pathname}?${params.toString()}`)
-                    }}
-                    className="appearance-none bg-background border border-border rounded-xl pl-10 pr-10 py-3 text-sm outline-none focus:border-accent transition-all cursor-pointer min-w-[150px] shadow-sm hover:border-muted-foreground/30"
-                  >
-                    <option value="">Semua Status</option>
-                    <option value="Draft">Draft</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Locked">Locked</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                    <ChevronDown size={16} />
+                        {pathname.includes('/admin/logs') && (
+                          <button 
+                            onClick={() => {
+                              const params = new URLSearchParams(searchParams.toString())
+                              const show = params.get('showFilters') === 'true'
+                              if (!show) params.set('showFilters', 'true')
+                              else params.delete('showFilters')
+                              router.push(`${pathname}?${params.toString()}`)
+                            }}
+                            className={`flex items-center gap-2 ml-4 px-5 py-2 rounded-xl border transition-all text-sm font-bold shadow-sm ${searchParams.get('showFilters') === 'true' ? 'bg-accent text-white border-accent' : 'bg-background text-secondary-foreground border-border hover:bg-muted'}`}
+                          >
+                            <Filter size={16} />
+                            {searchParams.get('showFilters') === 'true' ? 'Tutup Filter' : 'Filter Lanjutan'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {searchTerm && !pathname.includes('/documents') && !pathname.includes('/admin/logs') && (
+                      <button 
+                        onClick={() => setSearchTerm('')}
+                        className="pr-4 text-muted-foreground hover:text-destructive transition-all"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
-              )}
-
-              {pathname.includes('/admin/logs') && (
-                <button 
-                  onClick={() => {
-                    const params = new URLSearchParams(searchParams.toString())
-                    const show = params.get('showFilters') === 'true'
-                    if (!show) params.set('showFilters', 'true')
-                    else params.delete('showFilters')
-                    router.push(`${pathname}?${params.toString()}`)
-                  }}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl border transition-all text-sm font-bold shadow-sm ${searchParams.get('showFilters') === 'true' ? 'bg-accent text-white border-accent' : 'bg-background text-secondary-foreground border-border hover:bg-muted'}`}
-                >
-                  <Filter size={16} />
-                  {searchParams.get('showFilters') === 'true' ? 'Tutup Filter' : 'Filter Lanjutan'}
-                </button>
-              )}
-            </div>
-            
-            {/* Page Title on Mobile */}
-            <h1 className="md:hidden font-bold text-sm truncate">{currentPage}</h1>
+                
+                {/* Page Title on Mobile */}
+                <h1 className="md:hidden font-bold text-sm truncate">{currentPage}</h1>
+              </>
+            )}
           </div>
 
           {/* Right Section */}
           <div className="flex items-center gap-2 lg:gap-4 shrink-0">
-            <button 
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border transition-all"
-              title={theme === 'dark' ? 'Aktifkan Mode Terang' : 'Aktifkan Mode Gelap'}
-            >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
-            <button className="hidden sm:flex p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all relative">
-              <Bell size={20} />
-              <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
-            </button>
-            
-            <div className="hidden sm:block h-8 w-[1px] bg-border mx-1" />
-
-            {/* User Dropdown */}
-            <div className="relative">
+            {!mobileSearchOpen && (
               <button 
-                onClick={(e) => { e.stopPropagation(); setProfileDropdownOpen(!profileDropdownOpen) }}
-                className="flex items-center gap-2 lg:gap-3 pl-2 pr-1 py-1 rounded-2xl hover:bg-muted transition-all border border-transparent hover:border-border"
+                onClick={() => setMobileSearchOpen(true)}
+                className="md:hidden p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                title="Cari"
               >
-                <div className="flex flex-col items-end hidden lg:flex">
-                  <span className="text-sm font-bold text-foreground leading-none mb-1">{user?.firstName}</span>
-                  <span className="text-[10px] text-accent font-bold uppercase tracking-widest">{user?.role}</span>
-                </div>
-                <div className="h-9 w-9 lg:h-10 lg:w-10 rounded-xl bg-gradient-to-tr from-card to-muted border border-border flex items-center justify-center text-accent font-bold shadow-inner text-sm shrink-0">
-                  {user?.firstName?.[0] || '?'}
-                </div>
-                <ChevronDown size={14} className={`text-muted-foreground transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                <Search size={20} />
               </button>
+            )}
 
-              {profileDropdownOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-background border border-border rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="px-4 py-2 border-b border-border/50 mb-2 lg:hidden">
-                    <p className="text-sm font-bold truncate">{user?.firstName} {user?.lastName}</p>
-                    <p className="text-[10px] text-accent font-bold uppercase">{user?.role}</p>
-                  </div>
-                  <Link href="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-secondary-foreground hover:text-foreground hover:bg-muted transition-colors">
-                    <User size={16} /> Profil Saya
-                  </Link>
-                  {user?.role === 'ADMIN' && (
-                    <Link href="/settings" className="flex items-center gap-3 px-4 py-2 text-sm text-secondary-foreground hover:text-foreground hover:bg-muted transition-colors">
-                      <Settings size={16} /> Pengaturan Sistem
-                    </Link>
-                  )}
-                  <div className="my-2 border-t border-border/50" />
-                  <button 
-                    onClick={() => { auth.logout(); router.push('/login') }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogOut size={16} /> Keluar
-                  </button>
-                </div>
-              )}
-            </div>
+            {!mobileSearchOpen && (
+              <>
+                <button 
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border transition-all"
+                  title={theme === 'dark' ? 'Aktifkan Mode Terang' : 'Aktifkan Mode Gelap'}
+                >
+                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+
+                <button className="hidden sm:flex p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all relative">
+                  <Bell size={20} />
+                  <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-destructive border-2 border-background" />
+                </button>
+              </>
+            )}
+            
+
           </div>
         </header>
 
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto bg-background custom-scrollbar">
-          <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto min-h-[calc(100vh-160px)] animate-in fade-in duration-500">
+          <div className="p-4 sm:p-6 lg:p-6 max-w-full mx-auto min-h-[calc(100vh-160px)] animate-in fade-in duration-500">
             {children}
           </div>
           
@@ -419,6 +519,28 @@ export function AppLayout({ children }: AppLayoutProps) {
           </footer>
         </main>
       </div>
+      {/* Floating Label for Mini Sidebar */}
+      <AnimatePresence>
+        {!sidebarOpen && !mobileSidebarOpen && hoveredItem && (
+          <motion.div
+            initial={{ opacity: 0, x: -10, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed left-24 z-[100] pointer-events-none"
+            style={{ top: hoverPos, translateY: '-50%' }}
+          >
+            <div className="flex items-center">
+              <div className="h-8 w-1.5 bg-accent rounded-full shadow-[0_0_15px_rgba(188,38,24,0.5)] mr-3" />
+              <div className="px-4 py-2.5 bg-background/90 backdrop-blur-xl border border-border shadow-2xl rounded-2xl">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground whitespace-nowrap">
+                  {hoveredItem}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

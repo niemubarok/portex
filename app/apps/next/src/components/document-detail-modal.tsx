@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { PanelLeftClose, PanelLeftOpen, ChevronLeft, Info, Maximize2, Minimize2 } from 'lucide-react'
 import { Document, useApproveDocument, useLockDocument, useDocumentAuditLogs, useDocument, AuditLog } from '@/hooks/use-documents'
 import { format } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
@@ -27,7 +28,8 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
   const lockDoc = useLockDocument()
   const user = auth.getUser()
   const isManager = user?.role === 'MANAGER' || user?.role === 'ADMIN'
-  const [isTimelineOpen, setIsTimelineOpen] = useState(false)
+  const [isTimelineOpen, setIsTimelineOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const { data: auditLogs, isLoading: isLoadingAudit } = useDocumentAuditLogs(
     selectedDoc?.id, 
     true
@@ -125,21 +127,41 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] flex bg-[var(--bg-secondary)] animate-in fade-in duration-200">
-        {/* Left Sidebar - Details & Approval */}
-        <div className="w-[400px] flex-shrink-0 border-r border-[var(--border)] flex flex-col bg-[var(--bg-primary)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center gap-4">
+      <div className="fixed inset-0 z-[100] flex bg-[var(--bg-secondary)] animate-in fade-in duration-200 overflow-hidden">
+        {/* Backdrop for mobile only */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-black/20 backdrop-blur-[2px] z-40 transition-all md:hidden" 
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Left Sidebar - Details & Approval (Overlay/Drawer) */}
+        <div className={`
+          fixed md:absolute inset-y-0 left-0 z-50 
+          ${isSidebarOpen ? 'translate-x-0 w-full sm:w-[400px] lg:w-[450px]' : '-translate-x-full'} 
+          transition-transform duration-300 ease-in-out
+          border-r border-[var(--border)] flex flex-col bg-[var(--bg-primary)] shadow-2xl overflow-hidden
+        `}>
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-[var(--border)] flex items-center gap-3 md:gap-4 sticky top-0 bg-[var(--bg-primary)] z-20">
             <button 
               onClick={() => { onClose(); setActivePdfUrl(null) }} 
-              className="p-2 -ml-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors flex items-center gap-2 font-medium"
+              className="p-2 -ml-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors flex items-center gap-1.5 font-medium text-sm md:text-base whitespace-nowrap"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
               Kembali
             </button>
-            <h3 className="font-bold text-lg truncate flex-1">{selectedDoc.title}</h3>
+            <h3 className="font-bold text-base md:text-lg truncate flex-1">{selectedDoc.title}</h3>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              title="Tutup Sidebar"
+            >
+              <PanelLeftClose size={20} />
+            </button>
           </div>
           
-          <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+          <div className="p-4 md:p-6 space-y-4 md:space-y-6 flex-1 overflow-y-auto">
             <div className="grid grid-cols-1">
               <div>
                 <label className="text-[10px] uppercase tracking-wider font-bold text-[var(--text-muted)]">Status</label>
@@ -177,12 +199,12 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
             <div className="pt-2">
               <button 
                 onClick={() => setIsTimelineOpen(!isTimelineOpen)}
-                className="w-full flex items-center justify-between py-2 text-[10px] uppercase tracking-wider font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                className="w-full flex items-center justify-between py-2.5 px-1 text-[10px] uppercase tracking-wider font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/30 rounded-md"
               >
                 <span>Timeline Proses</span>
                 <svg 
-                  className={`w-4 h-4 transition-transform duration-200 ${isTimelineOpen ? 'rotate-180' : ''}`} 
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                  className={`w-4 h-4 transition-transform duration-300 ${isTimelineOpen ? 'rotate-180' : ''}`} 
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                 </svg>
@@ -219,7 +241,7 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center justify-between gap-4">
                               <p className="text-xs font-bold truncate">
                                 {log.action === 'UPLOAD_DOCUMENT' ? 'Dokumen Dibuat' :
                                  log.action === 'APPROVE_LEVEL_1' ? 'Persetujuan Level 1' :
@@ -227,7 +249,7 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
                                  log.action === 'UPDATE_DOCUMENT' ? 'Dokumen Diperbarui' :
                                  log.action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
                               </p>
-                              <span className="text-[10px] text-[var(--text-muted)] whitespace-nowrap">
+                              <span className="text-[9px] md:text-[10px] text-[var(--text-muted)] whitespace-nowrap bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded border border-[var(--border)]">
                                 {format(new Date(log.createdAt), 'dd MMM, HH:mm', { locale: idLocale })}
                               </span>
                             </div>
@@ -272,7 +294,18 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
         </div>
 
         {/* Right Main Area - PDF Viewer */}
-        <div className="flex-1 bg-black/5 flex flex-col relative">
+        <div className={`flex-1 bg-black/5 flex flex-col relative w-full h-full transition-all duration-300 ${!activePdfUrl && !isSidebarOpen ? 'hidden md:flex' : 'flex'}`}>
+          {!isSidebarOpen && (
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="absolute top-4 left-4 z-40 p-2.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl shadow-xl hover:bg-[var(--bg-hover)] transition-all animate-in slide-in-from-left-2 flex items-center gap-2 group"
+              title="Buka Detail"
+            >
+              <PanelLeftOpen size={20} className="text-[var(--accent)]" />
+              <span className="text-xs font-bold pr-1">Informasi Dokumen</span>
+            </button>
+          )}
+          
           {isLoadingPdf ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <svg className="animate-spin h-8 w-8 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75"/></svg>

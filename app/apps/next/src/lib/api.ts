@@ -6,10 +6,6 @@ export const api = axios.create({
   baseURL: API_URL,
 });
 
-// Import and setup demo mock if needed
-import { setupApiMock } from "./api-mock";
-setupApiMock(api);
-
 // Add a request interceptor to include the token
 api.interceptors.request.use(
   (config) => {

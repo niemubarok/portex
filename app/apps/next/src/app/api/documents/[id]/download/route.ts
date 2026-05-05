@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyToken } from '@/lib/jwt'
-import fs from 'fs'
 import path from 'path'
+import { getSupabaseServer } from '@/lib/supabase'
+
+const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'documents'
 
 async function getAuthUser(req: Request) {
   const authHeader = req.headers.get('Authorization')
@@ -36,37 +38,37 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: { message: 'File type not found' } }, { status: 404 })
     }
 
-    const isLocal = process.env.STORAGE_TYPE === 'local'
-    if (isLocal) {
-      const fullPath = path.join(process.cwd(), 'public', filePath)
-      if (!fs.existsSync(fullPath)) {
-        return NextResponse.json({ error: { message: 'File not found in storage' } }, { status: 404 })
-      }
+    const supabase = getSupabaseServer()
+    const { data, error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .download(filePath)
 
-      const fileBuffer = fs.readFileSync(fullPath)
-      const fileName = path.basename(filePath)
-      
-      await prisma.auditLog.create({
-        data: {
-          action: 'DOWNLOAD_DOCUMENT',
-          userId: user.id,
-          documentId: id,
-          ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-          details: `Downloaded ${type} file of document: ${document.title}`,
-        },
-      })
-
-      return new Response(fileBuffer, {
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${fileName}"`,
-        },
-      })
-    } else {
-      // S3 Logic here...
-      return NextResponse.json({ error: { message: 'S3 storage not yet fully implemented in download route' } }, { status: 501 })
+    if (error || !data) {
+      return NextResponse.json({ error: { message: 'File not found in storage' } }, { status: 404 })
     }
+
+    const arrayBuffer = await data.arrayBuffer()
+    const fileBuffer = Buffer.from(arrayBuffer)
+    const fileName = path.basename(filePath)
+    
+    await prisma.auditLog.create({
+      data: {
+        action: 'DOWNLOAD_DOCUMENT',
+        userId: user.id,
+        documentId: id,
+        ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
+        details: `Downloaded ${type} file of document: ${document.title}`,
+      },
+    })
+
+    return new Response(fileBuffer, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+      },
+    })
   } catch (error) {
+    console.error('Download error:', error)
     return NextResponse.json({ error: { message: 'Internal server error' } }, { status: 500 })
   }
 }

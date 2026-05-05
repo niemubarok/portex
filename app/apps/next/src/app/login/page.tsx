@@ -238,18 +238,7 @@ export default function LoginPage() {
               {isLogin ? 'Buat Akun Baru' : 'Sudah Memiliki Akun? Masuk'}
             </button>
 
-            {/* Local Demo Mode Toggle */}
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.setItem('portex_demo_mode', 'true');
-                window.location.reload();
-              }}
-              className="w-full mt-2 bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 text-accent rounded-xl py-3 text-xs font-bold transition-all flex items-center justify-center gap-2"
-            >
-              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              Aktifkan Mode Demo Lokal (LocalStorage & IndexedDB)
-            </button>
+
           </form>
 
           {/* Demo Credentials Section */}
