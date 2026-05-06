@@ -44,7 +44,15 @@ export async function GET(req: Request) {
     }
 
     if (action) {
-      where.action = action
+      if (action === 'APPROVE') {
+        where.action = 'APPROVE_LEVEL_1'
+      } else if (action === 'LOCK') {
+        where.action = 'APPROVE_FINAL'
+      } else if (['UPLOAD', 'UPDATE', 'DOWNLOAD', 'VIEW'].includes(action)) {
+        where.action = `${action}_DOCUMENT`
+      } else {
+        where.action = action
+      }
     }
 
     if (start_date || end_date) {

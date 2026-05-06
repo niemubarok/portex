@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyToken } from '@/lib/jwt'
+import { getSupabaseServer } from '@/lib/supabase'
+import { addDigitalSignature } from '@/lib/pdf-next'
+
+const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'documents'
 
 async function getAuthUser(req: Request) {
   const authHeader = req.headers.get('Authorization')
@@ -47,6 +51,39 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         managerNotes: notes,
       },
     })
+
+    // Process PO File (Add Digital Signature)
+    try {
+      const supabase = getSupabaseServer()
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from(SUPABASE_BUCKET)
+        .download(document.poPath)
+
+      if (!downloadError && fileData) {
+        const arrayBuffer = await fileData.arrayBuffer()
+        const poBuffer = Buffer.from(arrayBuffer)
+
+        const host = req.headers.get('host') || 'portex.app'
+        const protocol = req.headers.get('x-forwarded-proto') || 'http'
+        const qrText = `${protocol}://${host}/documents/${document.id}`
+        const signerName = `${user.firstName} ${user.lastName}`
+        const signerRole = user.role === 'ADMIN' ? 'IT Administrator' : 'Manager of Sales Export'
+        const dateStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
+
+        const processedBuffer = await addDigitalSignature(poBuffer, qrText, signerName, signerRole, dateStr)
+
+        // Re-upload to Supabase (overwrite)
+        await supabase.storage
+          .from(SUPABASE_BUCKET)
+          .upload(document.poPath, processedBuffer, {
+            contentType: 'application/pdf',
+            upsert: true
+          })
+      }
+    } catch (pdfError) {
+      console.error('Failed to apply digital signature:', pdfError)
+      // Continue anyway as the DB is already updated
+    }
 
     await prisma.auditLog.create({
       data: {

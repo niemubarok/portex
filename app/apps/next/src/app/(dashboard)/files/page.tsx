@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, Suspense } from 'react'
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useDocuments, Document } from '@/hooks/use-documents'
 import { StatusBadge } from '@/components/status-badge'
@@ -28,6 +28,8 @@ import {
   Download,
   FolderOpen,
   CalendarDays,
+  ChevronDown,
+  Filter,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -95,11 +97,27 @@ function FilesContent() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [contextMenu, setContextMenu] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false)
+  const statusRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setStatusDropdownOpen(false)
+      }
+    }
+    if (statusDropdownOpen) document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [statusDropdownOpen])
 
   const sortedDocuments = useMemo(() => {
     if (!documents) return []
-    const sorted = [...documents]
-    sorted.sort((a, b) => {
+    let filtered = [...documents]
+    if (statusFilter) {
+      filtered = filtered.filter(d => d.status === statusFilter)
+    }
+    filtered.sort((a, b) => {
       let cmp = 0
       switch (sortMode) {
         case 'time':
@@ -117,11 +135,46 @@ function FilesContent() {
       }
       return sortDir === 'asc' ? cmp : -cmp
     })
-    return sorted
-  }, [documents, sortMode, sortDir])
+    return filtered
+  }, [documents, sortMode, sortDir, statusFilter])
 
   const openFolder = sortedDocuments.find(d => d.id === openFolderId)
   const openFolderFiles = openFolder ? getFilesFromDocument(openFolder) : []
+
+  const processedOpenFolderFiles = useMemo(() => {
+    let files = [...openFolderFiles]
+    
+    if (q) {
+      const lowerQ = q.toLowerCase()
+      files = files.filter(f => 
+        f.name.toLowerCase().includes(lowerQ) || 
+        f.label.toLowerCase().includes(lowerQ) ||
+        f.type.toLowerCase().includes(lowerQ)
+      )
+    }
+
+    files.sort((a, b) => {
+      let cmp = 0
+      switch (sortMode) {
+        case 'time':
+          // File creation time is not available in FileItem, maintain original order
+          cmp = 0
+          break
+        case 'size': {
+          const aSize = FILE_TYPE_CONFIG[a.type]?.sizeEstimate || 150
+          const bSize = FILE_TYPE_CONFIG[b.type]?.sizeEstimate || 150
+          cmp = aSize - bSize
+          break
+        }
+        case 'az':
+          cmp = a.name.localeCompare(b.name, 'id')
+          break
+      }
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+
+    return files
+  }, [openFolderFiles, q, sortMode, sortDir])
 
   const totalFiles = useMemo(() => {
     if (!documents) return 0
@@ -151,86 +204,116 @@ function FilesContent() {
   return (
     <div className="max-w-full mx-auto py-6 sm:py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          {openFolderId && (
-            <button
-              onClick={() => setOpenFolderId(null)}
-              className="p-2 -ml-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
+      <div className="flex items-center justify-between gap-4 mb-5">
+        <div className="min-w-0">
+          {openFolderId ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setOpenFolderId(null)}
+                className="p-1.5 -ml-1 rounded-lg hover:bg-[var(--bg-hover)] transition-colors shrink-0"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div className="min-w-0">
+                <h1 className="hidden md:block text-xl font-bold tracking-tight truncate">{openFolder?.title}</h1>
+                <span className="md:hidden text-sm font-bold truncate block">{openFolder?.title}</span>
+                <p className="hidden md:block text-[10px] text-[var(--text-muted)] font-medium">{processedOpenFolderFiles.length} berkas</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h1 className="hidden md:block text-xl font-bold tracking-tight">Berkas Saya</h1>
+              <p className="hidden md:block text-xs text-[var(--text-muted)] font-medium">
+                {sortedDocuments.length} folder · {totalFiles} berkas
+              </p>
+            </div>
           )}
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              {openFolderId ? openFolder?.title : 'Berkas Saya'}
-            </h1>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              {openFolderId
-                ? `${openFolderFiles.length} berkas`
-                : `${sortedDocuments.length} folder · ${totalFiles} berkas`}
-            </p>
-          </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          {/* Sort Buttons */}
-          <div className="flex items-center bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-0.5 gap-0.5">
-            {([
-              { mode: 'time' as SortMode, icon: Clock, label: 'Waktu' },
-              { mode: 'size' as SortMode, icon: HardDrive, label: 'Ukuran' },
-              { mode: 'az' as SortMode, icon: ArrowDownAZ, label: 'A-Z' },
-            ]).map(({ mode, icon: Icon, label }) => (
-              <button
-                key={mode}
-                onClick={() => toggleSort(mode)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
-                  sortMode === mode
-                    ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
-                }`}
-                title={`Urutkan: ${label}`}
-              >
-                <Icon size={14} />
-                <span className="hidden sm:inline">{label}</span>
-                {sortMode === mode && (
-                  sortDir === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
-                )}
-              </button>
-            ))}
+        {/* Controls - unified bar */}
+        <div className="flex items-center bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-0.5 gap-0.5">
+          {/* Status Dropdown */}
+          <div className="relative" ref={statusRef}>
+            <button
+              onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                statusFilter
+                  ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Filter size={14} />
+              <span className="hidden sm:inline">{statusFilter ? ({ Draft: 'Draf', Approved: 'Disetujui', Locked: 'Terkunci', Rejected: 'Ditolak' } as Record<string,string>)[statusFilter] || statusFilter : 'Status'}</span>
+              <ChevronDown size={12} className={`transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {statusDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-40 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl shadow-2xl z-50 py-1.5 animate-in slide-in-from-top-2 duration-200">
+                {[
+                  { value: '', label: 'Semua Status' },
+                  { value: 'Draft', label: 'Draf' },
+                  { value: 'Approved', label: 'Disetujui' },
+                  { value: 'Locked', label: 'Terkunci' },
+                  { value: 'Rejected', label: 'Ditolak' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => { setStatusFilter(value); setStatusDropdownOpen(false) }}
+                    className={`w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--bg-hover)] transition-colors ${
+                      statusFilter === value ? 'text-[var(--accent)] bg-[var(--accent)]/5' : 'text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          <div className="h-5 w-px bg-[var(--border)] mx-0.5" />
+
+          {/* Sort Buttons */}
+          {([
+            { mode: 'time' as SortMode, icon: Clock, label: 'Waktu' },
+            { mode: 'size' as SortMode, icon: HardDrive, label: 'Ukuran' },
+            { mode: 'az' as SortMode, icon: ArrowDownAZ, label: 'A-Z' },
+          ]).map(({ mode, icon: Icon, label }) => (
+            <button
+              key={mode}
+              onClick={() => toggleSort(mode)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                sortMode === mode
+                  ? 'bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+              }`}
+              title={`Urutkan: ${label}`}
+            >
+              <Icon size={14} />
+              <span className="hidden sm:inline">{label}</span>
+              {sortMode === mode && (
+                sortDir === 'asc' ? <SortAsc size={12} /> : <SortDesc size={12} />
+              )}
+            </button>
+          ))}
+
+          <div className="h-5 w-px bg-[var(--border)] mx-0.5" />
 
           {/* View Toggle */}
-          <div className="flex items-center bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)] p-0.5 gap-0.5">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-              title="Tampilan Grid"
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
-              title="Tampilan List"
-            >
-              <List size={16} />
-            </button>
-          </div>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+            title="Tampilan Grid"
+          >
+            <LayoutGrid size={16} />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+            title="Tampilan List"
+          >
+            <List size={16} />
+          </button>
         </div>
       </div>
-
-      {/* Breadcrumb */}
-      {openFolderId && openFolder && (
-        <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] mb-5 px-1">
-          <button onClick={() => setOpenFolderId(null)} className="hover:text-[var(--accent)] transition-colors font-medium">
-            Berkas Saya
-          </button>
-          <ChevronRight size={12} />
-          <span className="text-[var(--text-primary)] font-bold truncate">{openFolder.title}</span>
-        </div>
-      )}
 
       {/* Content */}
       <AnimatePresence mode="wait">
@@ -347,7 +430,11 @@ function FilesContent() {
           >
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {openFolderFiles.map((file, idx) => {
+                {processedOpenFolderFiles.length === 0 ? (
+                  <div className="col-span-full flex flex-col items-center justify-center py-12 text-[var(--text-muted)]">
+                    <p className="text-sm font-medium">Tidak ada berkas yang cocok dengan filter</p>
+                  </div>
+                ) : processedOpenFolderFiles.map((file, idx) => {
                   const config = FILE_TYPE_CONFIG[file.type]
                   const Icon = file.icon
                   return (
@@ -387,7 +474,13 @@ function FilesContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
-                    {openFolderFiles.map((file, idx) => {
+                    {processedOpenFolderFiles.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-5 py-8 text-center text-sm text-[var(--text-muted)] font-medium">
+                          Tidak ada berkas yang cocok dengan filter
+                        </td>
+                      </tr>
+                    ) : processedOpenFolderFiles.map((file, idx) => {
                       const config = FILE_TYPE_CONFIG[file.type]
                       const Icon = file.icon
                       return (

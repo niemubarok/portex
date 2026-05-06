@@ -21,6 +21,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const { id } = await params
     const { searchParams } = new URL(req.url)
     const type = searchParams.get('type')
+    const mode = searchParams.get('mode') || 'download'
     const document = await prisma.document.findUnique({ where: { id, deletedAt: null } })
     if (!document) return NextResponse.json({ error: { message: 'Document not found' } }, { status: 404 })
 
@@ -53,18 +54,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     
     await prisma.auditLog.create({
       data: {
-        action: 'DOWNLOAD_DOCUMENT',
+        action: mode === 'view' ? 'VIEW_DOCUMENT' : 'DOWNLOAD_DOCUMENT',
         userId: user.id,
         documentId: id,
         ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1',
-        details: `Mengunduh file ${type}`,
+        details: `${mode === 'view' ? 'Melihat' : 'Mengunduh'} file ${type}`,
       },
     })
 
     return new Response(fileBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Content-Disposition': `${mode === 'view' ? 'inline' : 'attachment'}; filename="${fileName}"`,
       },
     })
   } catch (error) {

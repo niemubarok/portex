@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid'
-import path from 'path'
 import { getSupabaseServer } from './supabase'
 
 const SUPABASE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'documents'
@@ -8,9 +7,9 @@ export async function uploadFile(file: File, folder: string): Promise<string> {
   const bytes = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
   
-  const ext = path.extname(file.name)
-  const filename = `${uuidv4()}${ext}`
-  const targetPath = `${folder}/${filename}`
+  // Keep original filename, just remove slashes to prevent directory traversal
+  const safeName = file.name.replace(/[\/\\]/g, '')
+  const targetPath = `${folder}/${uuidv4()}/${safeName}`
 
   const supabase = getSupabaseServer()
   const { data, error } = await supabase.storage

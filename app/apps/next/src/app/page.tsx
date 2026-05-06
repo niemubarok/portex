@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { auth } from '@/lib/auth'
 
 export default function HomePage() {
@@ -16,6 +17,15 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative py-24 px-6">
         <div className="max-w-5xl mx-auto text-center">
+          <div className="flex justify-center items-center gap-4 mb-8">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white shadow-xl shadow-accent/10 flex items-center justify-center overflow-hidden border border-border/30">
+              <Image src="/icon.png" alt="PortEx" width={56} height={56} className="object-contain" priority />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">PortEx</span>
+              <span className="text-xs sm:text-sm text-accent uppercase tracking-[0.2em] font-black">E-Document</span>
+            </div>
+          </div>
           <span className="inline-flex items-center rounded-full bg-accent/10 border border-accent/20 px-4 py-1.5 text-sm font-medium text-accent mb-6">
             Portal E-Document Export Sales
           </span>

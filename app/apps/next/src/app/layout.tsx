@@ -10,7 +10,11 @@ const onest = Onest({
 
 export const metadata: Metadata = {
   title: "PortEx - E-Document Portal",
-  description: "Secure and efficient document management system",
+  description: "Portal E-Document Export Sales — Sistem pengelolaan dokumen ekspor terpusat untuk PT Semen Tonasa, SIG Group.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

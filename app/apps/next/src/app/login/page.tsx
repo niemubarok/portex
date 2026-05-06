@@ -58,8 +58,8 @@ export default function LoginPage() {
         {/* Content Overlay */}
         <div className="relative z-10 flex flex-col justify-between p-16 w-full">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-              <ShieldCheck className="text-white w-7 h-7" />
+            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden">
+              <Image src="/icon.png" alt="PortEx" width={36} height={36} className="object-contain" />
             </div>
             <span className="text-white text-xl font-bold tracking-tight">PortEx</span>
           </div>
@@ -99,8 +99,8 @@ export default function LoginPage() {
         <div className="w-full max-w-md relative z-10">
           {/* Mobile Logo */}
           <div className="lg:hidden flex flex-col items-center mb-10">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
-              <ShieldCheck className="text-accent w-8 h-8" />
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4 overflow-hidden">
+              <Image src="/icon.png" alt="PortEx" width={48} height={48} className="object-contain" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">PortEx Portal</h1>
             <p className="text-sm text-muted-foreground">Export Sales — PT Semen Tonasa</p>

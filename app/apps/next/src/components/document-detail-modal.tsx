@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth'
 import { StatusBadge } from './status-badge'
 import { ConfirmationModal, ConfirmationType } from './confirmation-modal'
 import { api } from '@/lib/api'
+import { PdfViewer } from './pdf-viewer'
 
 interface DocumentDetailModalProps {
   document?: Document | null
@@ -113,6 +114,35 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
       setActivePdfUrl(null)
     }
   }, [selectedDoc?.id])
+
+  const handleDownload = async () => {
+    if (!selectedDoc || !activePdfType) return;
+    try {
+      const res = await api.get(`/api/documents/${selectedDoc.id}/download`, { 
+        params: { type: activePdfType, mode: 'download' },
+        responseType: 'blob' 
+      });
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      // Get the appropriate file path based on type
+      let filePath = selectedDoc.poPath;
+      if (activePdfType === 'invoice') filePath = selectedDoc.invoicePath;
+      else if (activePdfType === 'packing_list') filePath = selectedDoc.packingListPath;
+      else if (activePdfType === 'peb') filePath = selectedDoc.pebPath;
+      else if (activePdfType === 'bl') filePath = selectedDoc.blPath;
+      else if (activePdfType === 'other') filePath = selectedDoc.otherPath;
+      
+      const originalFilename = filePath?.split('/').pop() || `${selectedDoc.title}-${activePdfType}.pdf`;
+      a.download = originalFilename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Gagal mengunduh dokumen:', err);
+    }
+  };
 
   if (isLoadingDoc) {
     return (
@@ -292,11 +322,24 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
                 </div>
                 <button
                   onClick={() => handleApprove(selectedDoc.id, selectedDoc.title, selectedDoc.status)}
-                  disabled={approveDoc.isPending}
+                  disabled={approveDoc.isPending || lockDoc.isPending}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--success)] px-4 py-3 text-sm font-bold text-white hover:bg-[var(--success-hover)] disabled:opacity-50 transition-all shadow-lg shadow-[var(--success)]/20"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                  {selectedDoc.status === 'Draft' ? 'Setujui Dokumen (Level 1)' : 'Kunci Dokumen (Final)'}
+                  {approveDoc.isPending || lockDoc.isPending ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-25" />
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+                      </svg>
+                      Memproses...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                      {selectedDoc.status === 'Draft' ? 'Setujui Dokumen (Level 1)' : 'Kunci Dokumen (Final)'}
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -321,10 +364,10 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
               <svg className="animate-spin h-8 w-8 text-[var(--accent)]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"/><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75"/></svg>
             </div>
           ) : activePdfUrl ? (
-            <iframe 
-              src={`${activePdfUrl}#navpanes=0`} 
-              className="w-full h-full border-0"
-              title="Document Viewer"
+            <PdfViewer 
+              url={activePdfUrl} 
+              allowDownload={true} 
+              onDownload={handleDownload} 
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-muted)]">
@@ -344,7 +387,7 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
         confirmText={confirmState.confirmText}
         onClose={closeConfirm}
         onConfirm={confirmState.onConfirm}
-        isLoading={approveDoc.isPending}
+        isLoading={approveDoc.isPending || lockDoc.isPending}
       />
     </>
   )

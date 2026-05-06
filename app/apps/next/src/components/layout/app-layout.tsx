@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { 
   LayoutDashboard, 
@@ -206,8 +207,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Branding Area */}
         <div className="flex h-20 items-center px-6 border-b border-border/50 shrink-0 overflow-hidden">
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent-hover text-white font-bold shadow-lg shadow-accent/20 shrink-0">
-              P
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg shadow-accent/10 shrink-0 overflow-hidden border border-border/30">
+              <Image src="/icon.png" alt="PortEx" width={32} height={32} className="object-contain" />
             </div>
             {(sidebarOpen || mobileSidebarOpen) && (
               <div className="flex flex-col min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
