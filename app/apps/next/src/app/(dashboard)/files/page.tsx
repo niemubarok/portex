@@ -334,7 +334,7 @@ function FilesContent() {
               </div>
             ) : viewMode === 'grid' ? (
               /* Grid View - Folders */
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                 {sortedDocuments.map((doc, idx) => {
                   const files = getFilesFromDocument(doc)
                   return (
@@ -344,25 +344,27 @@ function FilesContent() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.03, duration: 0.2 }}
                       onClick={() => setOpenFolderId(doc.id)}
-                      className="group relative flex flex-col items-center p-4 sm:p-5 rounded-2xl bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] hover:shadow-lg hover:shadow-[var(--accent)]/5 transition-all duration-200 text-center cursor-pointer"
+                      className="group flex items-center p-3 gap-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border)] hover:bg-[var(--bg-hover)] hover:border-[var(--accent)] hover:shadow-sm transition-all duration-200 cursor-pointer text-left"
                     >
-                      <div className="relative mb-3">
+                      <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--bg-secondary)] group-hover:bg-[var(--accent)]/10 transition-colors">
                         <Folder
-                          size={48}
-                          className="text-[var(--accent)] group-hover:scale-110 transition-transform duration-200"
-                          strokeWidth={1.2}
-                          fill="var(--accent)"
-                          fillOpacity={0.1}
+                          size={20}
+                          className="text-[var(--text-secondary)] group-hover:text-[var(--accent)] transition-colors"
+                          fill="currentColor"
+                          fillOpacity={0.2}
                         />
-                        <span className="absolute -bottom-1 -right-1 text-[9px] font-black bg-[var(--accent)] text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
-                          {files.length}
-                        </span>
                       </div>
-                      <p className="text-xs font-bold truncate w-full leading-snug">{doc.title}</p>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-1 truncate w-full">
-                        {new Date(doc.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                      </p>
-                      <div className="mt-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate leading-tight text-[var(--text-primary)]">{doc.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-[10px] text-[var(--text-muted)] truncate">
+                            {new Date(doc.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                          <span className="w-1 h-1 rounded-full bg-[var(--border)]" />
+                          <p className="text-[10px] text-[var(--text-muted)] truncate">{files.length} item</p>
+                        </div>
+                      </div>
+                      <div className="shrink-0 scale-75 origin-right">
                         <StatusBadge status={doc.status} />
                       </div>
                     </motion.button>
@@ -397,8 +399,8 @@ function FilesContent() {
                         >
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-3">
-                              <Folder size={20} className="text-[var(--accent)] shrink-0 group-hover:scale-110 transition-transform" strokeWidth={1.5} fill="var(--accent)" fillOpacity={0.1} />
-                              <span className="font-bold truncate">{doc.title}</span>
+                              <Folder size={20} className="text-[var(--text-secondary)] shrink-0 group-hover:text-[var(--text-primary)] transition-colors" strokeWidth={1.5} fill="currentColor" fillOpacity={0.2} />
+                              <span className="font-medium text-sm truncate">{doc.title}</span>
                             </div>
                           </td>
                           <td className="px-5 py-3 hidden sm:table-cell">
@@ -429,7 +431,7 @@ function FilesContent() {
             transition={{ duration: 0.2 }}
           >
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {processedOpenFolderFiles.length === 0 ? (
                   <div className="col-span-full flex flex-col items-center justify-center py-12 text-[var(--text-muted)]">
                     <p className="text-sm font-medium">Tidak ada berkas yang cocok dengan filter</p>
@@ -443,22 +445,29 @@ function FilesContent() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.05, duration: 0.2 }}
-                      className="group relative flex flex-col items-center p-5 rounded-2xl bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] hover:shadow-lg transition-all duration-200 cursor-pointer"
+                      className="group flex flex-col rounded-xl bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] border border-[var(--border)] overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
                       onClick={() => openFolder && setSelectedDoc(openFolder)}
                     >
-                      {/* File icon with colored accent */}
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200"
-                        style={{ backgroundColor: `color-mix(in srgb, ${file.color} 12%, transparent)` }}
-                      >
-                        <Icon size={28} style={{ color: file.color }} strokeWidth={1.5} />
+                      {/* Top preview area */}
+                      <div className="bg-[var(--bg-secondary)] h-32 flex items-center justify-center border-b border-[var(--border)] relative overflow-hidden transition-colors">
+                        <Icon size={48} style={{ color: file.color }} strokeWidth={1} className="opacity-50 group-hover:scale-110 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors duration-300" />
                       </div>
-                      <p className="text-xs font-bold truncate w-full text-center">{file.label}</p>
-                      <p className="text-[10px] text-[var(--text-muted)] truncate w-full text-center mt-0.5">{file.name}</p>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-1.5 font-medium">{formatFileSize(config?.sizeEstimate || 150)}</p>
-
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/[0.02] dark:group-hover:bg-white/[0.02] transition-colors" />
+                      
+                      {/* Bottom info area */}
+                      <div className="p-3 flex items-start gap-3 bg-[var(--bg-primary)]">
+                        <div className="shrink-0 mt-0.5">
+                          <Icon size={18} style={{ color: file.color }} strokeWidth={2} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate text-[var(--text-primary)]" title={file.name}>{file.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-[var(--text-muted)] truncate">{file.label}</p>
+                            <span className="w-1 h-1 rounded-full bg-[var(--border)]" />
+                            <p className="text-[10px] text-[var(--text-muted)] truncate">{formatFileSize(config?.sizeEstimate || 150)}</p>
+                          </div>
+                        </div>
+                      </div>
                     </motion.div>
                   )
                 })}
@@ -494,14 +503,11 @@ function FilesContent() {
                         >
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-3">
-                              <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                style={{ backgroundColor: `color-mix(in srgb, ${file.color} 12%, transparent)` }}
-                              >
-                                <Icon size={16} style={{ color: file.color }} strokeWidth={2} />
+                              <div className="shrink-0">
+                                <Icon size={20} style={{ color: file.color }} strokeWidth={2} />
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-xs truncate">{file.name}</p>
+                                <p className="font-medium text-sm truncate">{file.name}</p>
                                 <p className="text-[10px] text-[var(--text-muted)]">{file.label}</p>
                               </div>
                             </div>
