@@ -61,9 +61,8 @@ export default function EditDocumentPage() {
     if (document) {
       const user = auth.getUser()
       const isOwner = String(document.uploaderId) === user?.id
-      const isAdmin = user?.role === 'ADMIN'
 
-      if (document.status !== 'Draft' || (!isAdmin && !isOwner)) {
+      if (document.status !== 'Draft' || !isOwner) {
         router.push('/documents')
       }
       setForm({

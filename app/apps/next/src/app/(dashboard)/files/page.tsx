@@ -330,7 +330,7 @@ function FilesContent() {
               <div className="flex flex-col items-center justify-center py-24 text-[var(--text-muted)]">
                 <FolderOpen size={56} className="mb-4 opacity-20" strokeWidth={1} />
                 <p className="text-base font-medium mb-1">Belum ada berkas</p>
-                <p className="text-sm">Upload dokumen terlebih dahulu untuk melihat berkas di sini</p>
+                <p className="text-sm">Klik tombol "Baru" di sidebar untuk mengunggah dokumen terlebih dahulu</p>
               </div>
             ) : viewMode === 'grid' ? (
               /* Grid View - Folders */

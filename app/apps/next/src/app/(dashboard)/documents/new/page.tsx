@@ -13,7 +13,14 @@ export default function NewDocumentPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!auth.isAuthenticated()) router.push('/login')
+    if (!auth.isAuthenticated()) {
+      router.push('/login')
+    } else {
+      const user = auth.getUser()
+      if (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'AUDITOR') {
+        router.push('/dashboard')
+      }
+    }
   }, [router])
 
   const [form, setForm] = useState({

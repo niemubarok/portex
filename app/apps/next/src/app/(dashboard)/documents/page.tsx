@@ -71,14 +71,6 @@ function DocumentsContent() {
           <p className="text-sm text-muted-foreground mt-1">Kelola semua dokumen kepatuhan ekspor</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3">
-          {user?.role !== 'MANAGER' && user?.role !== 'AUDITOR' && (
-            <Link href="/documents/new" className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-hover transition-all shadow-lg shadow-accent/20 hover:-translate-y-0.5 active:translate-y-0">
-              <Plus size={18} />
-              Upload
-            </Link>
-          )}
-        </div>
       </div>
 
       {/* Table */}
@@ -91,7 +83,7 @@ function DocumentsContent() {
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <svg className="w-16 h-16 mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
             <p className="text-base font-medium mb-1">Belum ada dokumen</p>
-            <p className="text-sm">Klik tombol "Upload Dokumen" untuk memulai</p>
+            <p className="text-sm">Klik tombol "Baru" di sidebar untuk memulai</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -146,7 +138,7 @@ function DocumentsContent() {
                         >
                           <Eye size={18} />
                         </button>
-                        {(doc.status === 'Draft' && (user?.role === 'ADMIN' || doc.uploaderId === user?.id)) && (
+                        {(doc.status === 'Draft' && doc.uploaderId === user?.id) && (
                           <Link
                             href={`/documents/${doc.id}/edit`}
                             className="text-muted-foreground hover:text-warning transition-colors p-2 rounded-lg hover:bg-warning/10"
@@ -156,7 +148,7 @@ function DocumentsContent() {
                           </Link>
                         )}
 
-                      {(doc.status === 'Draft' && (user?.role === 'ADMIN' || doc.uploaderId === user?.id)) && (
+                      {(doc.status === 'Draft' && doc.uploaderId === user?.id) && (
                         <button
                           onClick={() => handleDelete(doc.id, doc.title)}
                           className="text-muted-foreground hover:text-destructive transition-colors p-2 rounded-lg hover:bg-destructive/10"

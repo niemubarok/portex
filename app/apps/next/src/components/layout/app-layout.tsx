@@ -229,17 +229,19 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col py-4 mt-2">
           {/* New Button (Drive Style) */}
           <div className={`px-4 mb-6 ${!sidebarOpen && !mobileSidebarOpen ? 'flex justify-center' : ''}`}>
-            <Link 
-              href="/documents/new"
-              className={`flex items-center gap-3 bg-background hover:bg-muted/50 border border-border shadow-sm transition-all duration-200 text-foreground ${sidebarOpen || mobileSidebarOpen ? 'rounded-2xl px-4 py-3.5 w-max pr-6' : 'rounded-2xl p-3 w-max'}`}
-            >
-              <div className="flex items-center justify-center text-foreground">
-                 <Plus size={24} />
-              </div>
-              {(sidebarOpen || mobileSidebarOpen) && (
-                <span className="font-medium text-sm">Baru</span>
-              )}
-            </Link>
+            {user?.role !== 'ADMIN' && user?.role !== 'MANAGER' && user?.role !== 'AUDITOR' && (
+              <Link 
+                href="/documents/new"
+                className={`flex items-center gap-3 bg-background hover:bg-muted/50 border border-border shadow-sm transition-all duration-200 text-foreground ${sidebarOpen || mobileSidebarOpen ? 'rounded-2xl px-4 py-3.5 w-max pr-6' : 'rounded-2xl p-3 w-max'}`}
+              >
+                <div className="flex items-center justify-center text-foreground">
+                   <Plus size={24} />
+                </div>
+                {(sidebarOpen || mobileSidebarOpen) && (
+                  <span className="font-medium text-sm">Baru</span>
+                )}
+              </Link>
+            )}
           </div>
 
           <nav className="flex-1 px-3 space-y-1">
