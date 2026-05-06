@@ -241,11 +241,12 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
               </button>
               
               {isTimelineOpen && (
-                <div className="mt-4 relative animate-in slide-in-from-top-2 duration-200">
-                  {/* Vertical Line */}
-                  <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-[var(--border)]" />
-                  
-                  <div className="space-y-6 relative">
+                <div className="mt-4 animate-in slide-in-from-top-2 duration-200 max-h-[280px] overflow-y-auto pr-2 overflow-x-hidden [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--border)] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[var(--text-muted)]">
+                  <div className="relative">
+                    {/* Vertical Line */}
+                    <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-[var(--border)]" />
+                    
+                    <div className="space-y-6 relative">
                     {isLoadingAudit ? (
                       <div className="flex items-center gap-3 pl-8 py-2">
                         <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
@@ -302,6 +303,7 @@ export function DocumentDetailModal({ document: providedDoc, documentId, onClose
                     ) : (
                       <p className="text-xs text-[var(--text-muted)] pl-8 italic">Belum ada riwayat proses.</p>
                     )}
+                    </div>
                   </div>
                 </div>
               )}
