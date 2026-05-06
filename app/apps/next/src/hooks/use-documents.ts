@@ -13,6 +13,12 @@ export interface Document {
   otherPath: string
   retentionYears: number
   uploaderId: string
+  uploader?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
   notes?: string
   managerNotes?: string
 

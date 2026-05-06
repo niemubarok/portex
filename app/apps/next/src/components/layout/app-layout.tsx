@@ -22,7 +22,8 @@ import {
   Filter,
   ChevronDown,
   Activity,
-  FolderOpen
+  FolderOpen,
+  Plus
 } from 'lucide-react'
 
 import { motion, AnimatePresence } from 'framer-motion'
@@ -199,21 +200,20 @@ export function AppLayout({ children }: AppLayoutProps) {
       <aside 
         className={`
           fixed inset-y-0 left-0 z-[50] lg:relative 
-          ${sidebarOpen ? 'w-72' : 'w-24'} 
-          ${mobileSidebarOpen ? 'translate-x-0 !w-72' : '-translate-x-full lg:translate-x-0'} 
-          flex flex-col border-r border-border bg-background/95 backdrop-blur-xl lg:bg-muted/30 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none
+          ${sidebarOpen ? 'w-[260px]' : 'w-20'} 
+          ${mobileSidebarOpen ? 'translate-x-0 !w-[260px]' : '-translate-x-full lg:translate-x-0'} 
+          flex flex-col bg-background transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none
         `}
       >
         {/* Branding Area */}
-        <div className="flex h-20 items-center px-6 border-b border-border/50 shrink-0 overflow-hidden">
-          <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg shadow-accent/10 shrink-0 overflow-hidden border border-border/30">
-              <Image src="/icon.png" alt="PortEx" width={32} height={32} className="object-contain" />
+        <div className="flex h-20 items-center px-4 border-b border-border shrink-0 overflow-hidden">
+          <Link href="/" className="flex items-center gap-3 shrink-0 pl-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm shrink-0 overflow-hidden border border-border/30">
+              <Image src="/icon.png" alt="PortEx" width={24} height={24} className="object-contain" />
             </div>
             {(sidebarOpen || mobileSidebarOpen) && (
               <div className="flex flex-col min-w-0 animate-in fade-in slide-in-from-left-2 duration-300">
-                <span className="font-bold tracking-tight text-lg leading-tight truncate">PortEx</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold truncate">E-Document</span>
+                <span className="font-semibold text-lg text-foreground truncate">PortEx</span>
               </div>
             )}
           </Link>
@@ -224,98 +224,107 @@ export function AppLayout({ children }: AppLayoutProps) {
             <X size={20} />
           </button>
         </div>
-        {/* User Profile Section */}
-        <div className="px-6 py-8 border-b border-border/30 bg-muted/10 shrink-0 overflow-hidden">
-          <div className={`flex flex-col ${(sidebarOpen || mobileSidebarOpen) ? 'items-start' : 'items-center'} gap-4`}>
-            <div 
-              className="relative group"
-              onMouseEnter={(e) => {
-                if (!sidebarOpen && !mobileSidebarOpen) {
-                  const rect = e.currentTarget.getBoundingClientRect()
-                  setHoverPos(rect.top + rect.height / 2)
-                  setHoveredItem(`${user?.firstName} ${user?.lastName}`)
-                }
-              }}
-              onMouseLeave={() => setHoveredItem(null)}
+
+        {/* New Button & Navigation Area */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col py-4 mt-2">
+          {/* New Button (Drive Style) */}
+          <div className={`px-4 mb-6 ${!sidebarOpen && !mobileSidebarOpen ? 'flex justify-center' : ''}`}>
+            <Link 
+              href="/documents/new"
+              className={`flex items-center gap-3 bg-background hover:bg-muted/50 border border-border shadow-sm transition-all duration-200 text-foreground ${sidebarOpen || mobileSidebarOpen ? 'rounded-2xl px-4 py-3.5 w-max pr-6' : 'rounded-2xl p-3 w-max'}`}
             >
-              <div className="h-16 w-16 shrink-0 rounded-2xl bg-gradient-to-tr from-accent to-accent-hover border-2 border-background flex items-center justify-center text-white text-2xl font-bold shadow-2xl shadow-accent/20 transition-transform group-hover:scale-105 duration-300 cursor-pointer">
-                {user?.firstName?.[0] || '?'}
+              <div className="flex items-center justify-center text-foreground">
+                 <Plus size={24} />
               </div>
-              <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-success border-2 border-background shadow-sm" />
-            </div>
-            
-            {(sidebarOpen || mobileSidebarOpen) && (
-              <div className="flex flex-col min-w-0 animate-in fade-in slide-in-from-top-2 duration-500">
-                <span className="font-bold text-lg leading-tight truncate text-foreground/90">{user?.firstName} {user?.lastName}</span>
-                <span className="text-[10px] text-accent font-black uppercase tracking-[0.3em] mt-2">{user?.role}</span>
-                
-                <div className="flex items-center gap-4 mt-5">
-                  <Link href="/profile" className="group/link flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/60 hover:text-accent transition-all">
-                    <User size={14} className="text-foreground/40 group-hover/link:text-accent transition-colors" />
-                    Profil
-                  </Link>
-                  <div className="h-3 w-[1px] bg-border" />
-                  <button 
-                    onClick={() => { auth.logout(); router.push('/login') }}
-                    className="group/link flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/60 hover:text-destructive transition-all"
-                  >
-                    <LogOut size={14} className="text-foreground/40 group-hover/link:text-destructive transition-colors" />
-                    Keluar
-                  </button>
-                </div>
-              </div>
-            )}
+              {(sidebarOpen || mobileSidebarOpen) && (
+                <span className="font-medium text-sm">Baru</span>
+              )}
+            </Link>
           </div>
+
+          <nav className="flex-1 px-3 space-y-1">
+            {filteredNavigation.map((item, idx) => {
+              if (item.type === 'divider') {
+                return <div key={idx} className="my-3 border-t border-border/40 mx-3" />
+              }
+              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href as string))
+              return (
+                <Link
+                  key={typeof item.name === 'string' ? item.name : 'nav-item'}
+                  href={item.href as string}
+                  onMouseEnter={(e) => {
+                    if (!sidebarOpen && !mobileSidebarOpen) {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      setHoverPos(rect.top + rect.height / 2)
+                      setHoveredItem(typeof item.name === 'string' ? item.name : '')
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  className={`group relative flex items-center gap-3 rounded-full px-4 py-2.5 text-sm transition-all duration-200 ${
+                    isActive
+                      ? 'bg-accent/10 text-accent font-medium'
+                      : 'text-foreground/70 hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <div className={`shrink-0 ${isActive ? 'text-accent' : 'text-foreground/50 group-hover:text-foreground transition-colors'}`}>
+                    {item.icon && <item.icon size={20} />}
+                  </div>
+                  {(sidebarOpen || mobileSidebarOpen) && (
+                    <span className="truncate animate-in fade-in slide-in-from-left-2 duration-300">
+                      {item.name}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
         </div>
 
-        {/* Navigation Area */}
-        <nav className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar space-y-1">
-          {filteredNavigation.map((item, idx) => {
-            if (item.type === 'divider') {
-              return <div key={idx} className="my-4 border-t border-border/30 mx-2" />
-            }
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href as string))
-            return (
-              <Link
-                key={typeof item.name === 'string' ? item.name : 'nav-item'}
-                href={item.href as string}
+        {/* User Profile Section (Bottom) */}
+        <div className="p-3 shrink-0">
+          <div className={`flex items-center ${sidebarOpen || mobileSidebarOpen ? 'gap-2 px-2 py-2 rounded-xl hover:bg-muted/50 transition-colors group/profile' : 'justify-center'}`}>
+            <Link href="/profile" className="flex items-center gap-3 min-w-0 flex-1" title="Lihat Profil">
+              <div 
+                className="relative shrink-0"
                 onMouseEnter={(e) => {
                   if (!sidebarOpen && !mobileSidebarOpen) {
                     const rect = e.currentTarget.getBoundingClientRect()
                     setHoverPos(rect.top + rect.height / 2)
-                    setHoveredItem(typeof item.name === 'string' ? item.name : '')
+                    setHoveredItem(`${user?.firstName} ${user?.lastName}`)
                   }
                 }}
                 onMouseLeave={() => setHoveredItem(null)}
-                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-accent text-white shadow-lg shadow-accent/20'
-                    : 'text-foreground/70 hover:bg-muted hover:text-foreground'
-                }`}
               >
-                <div className={`shrink-0 ${isActive ? 'text-white' : 'text-foreground/40 group-hover:text-foreground transition-colors'}`}>
-                  {item.icon && <item.icon size={20} />}
+                <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center text-accent text-sm font-bold shadow-sm group-hover/profile:bg-accent/20 transition-colors">
+                  {user?.firstName?.[0] || '?'}
                 </div>
-                {(sidebarOpen || mobileSidebarOpen) && (
-                  <span className="truncate animate-in fade-in slide-in-from-left-2 duration-300">
-                    {item.name}
-                  </span>
-                )}
-                {(sidebarOpen || mobileSidebarOpen) && isActive && (
-                  <div className="ml-auto h-1.5 w-1.5 rounded-full bg-white/50" />
-                )}
-              </Link>
-            )
-          })}
-        </nav>
-
-
+              </div>
+              
+              {(sidebarOpen || mobileSidebarOpen) && (
+                <div className="flex flex-col min-w-0 flex-1 animate-in fade-in duration-300">
+                  <span className="font-medium text-sm leading-tight truncate text-foreground group-hover/profile:text-accent transition-colors">{user?.firstName} {user?.lastName}</span>
+                  <span className="text-xs text-muted-foreground truncate">{user?.role}</span>
+                </div>
+              )}
+            </Link>
+            
+            {(sidebarOpen || mobileSidebarOpen) && (
+              <button 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); auth.logout(); router.push('/login') }}
+                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors shrink-0"
+                title="Keluar"
+              >
+                <LogOut size={16} />
+              </button>
+            )}
+          </div>
+        </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Topbar */}
-        <header className={`${mobileSearchOpen ? 'py-4 h-auto min-h-[80px]' : 'h-20'} border-b border-border bg-muted/30 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 z-20 shrink-0 transition-all duration-300`}>
+        <header className={`${mobileSearchOpen ? 'py-4 h-auto min-h-[80px]' : 'h-20'} border-b border-border bg-background flex items-center justify-between px-4 lg:px-8 z-20 shrink-0 transition-all duration-300`}>
           <div className="flex items-center gap-3 lg:gap-6 flex-1 min-w-0">
             {!mobileSearchOpen && (
               <button 
@@ -477,7 +486,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                               else params.delete('showFilters')
                               router.push(`${pathname}?${params.toString()}`)
                             }}
-                            className={`flex items-center gap-2 ml-4 px-5 py-2 rounded-xl border transition-all text-sm font-bold shadow-sm ${searchParams.get('showFilters') === 'true' ? 'bg-accent text-white border-accent' : 'bg-background text-secondary-foreground border-border hover:bg-muted'}`}
+                            className={`flex items-center gap-2 ml-3 px-3 py-1.5 rounded-xl transition-all font-bold text-xs uppercase tracking-widest whitespace-nowrap ${searchParams.get('showFilters') === 'true' ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-muted-foreground hover:text-accent hover:bg-accent/5'}`}
                           >
                             <Filter size={16} />
                             {searchParams.get('showFilters') === 'true' ? 'Tutup Filter' : 'Filter Lanjutan'}

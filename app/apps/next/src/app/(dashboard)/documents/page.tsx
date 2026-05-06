@@ -100,6 +100,7 @@ function DocumentsContent() {
                 <tr className="text-left text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
                   <th className="px-5 py-2 font-medium">Judul Dokumen</th>
                   <th className="px-5 py-2 font-medium">PO</th>
+                  <th className="px-5 py-2 font-medium">Pengunggah</th>
                   <th className="px-5 py-2 font-medium">Status</th>
                   <th className="px-5 py-2 font-medium">Tanggal Upload</th>
                   <th className="px-5 py-2 font-medium text-right">Aksi</th>
@@ -116,6 +117,18 @@ function DocumentsContent() {
                         <span className="text-success text-xs font-medium">✓ Ada</span>
                       ) : (
                         <span className="text-destructive text-xs font-medium">✗ Belum</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-2.5">
+                      {doc.uploader ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 shrink-0 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent border border-accent/20">
+                            {doc.uploader.firstName?.[0] || '?'}
+                          </div>
+                          <span className="font-medium text-xs whitespace-nowrap">{doc.uploader.firstName} {doc.uploader.lastName}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs font-medium italic">Sistem</span>
                       )}
                     </td>
                     <td className="px-5 py-2.5"><StatusBadge status={doc.status} /></td>
